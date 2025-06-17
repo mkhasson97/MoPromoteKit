@@ -20,19 +20,44 @@
 
 ## 📱 Screenshots
 
-*Add your screenshots here showing the cards in action*
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <h3>Full</h3>
+        <img src="https://github.com/user-attachments/assets/42a371ba-36c7-4093-be84-b2da7797115f" width="200" alt="Before">
+      </td>
+      <td align="center">
+        <h3>Compact</h3>
+        <img src="https://github.com/user-attachments/assets/08692ce6-25db-4be2-ac12-b3ffba42325e" width="200" alt="After">
+      </td>
+    </tr>
+  </table>
+</div>
 
 ## 🚀 Quick Start
 
-### Installation
+## 🚀 Installation
 
-Add MoPromoteKit to your project using Swift Package Manager:
+### Swift Package Manager
 
+#### Xcode
+
+1. **File → Add Package Dependencies**
+2. **Enter URL**: `https://github.com/mkhasson97/MoPromoteKit.git`
+3. **Add Package**
+
+#### Package.swift
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/mkhasson97/MoPromoteKit", from: "1.0.0")
+]
 ```
-https://github.com/mkhasson97/MoPromoteKit.git
-```
 
-### Basic Usage
+## 💡 Usage
+
+### Basic Example
 
 ```swift
 import SwiftUI
