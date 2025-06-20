@@ -1,5 +1,8 @@
 # MoPromoteKit
-
+<div align="center">
+<img src="https://github.com/user-attachments/assets/92d23a4b-e681-4786-9683-1795fcf53138" width="300" alt="Before">
+</div>
+  
 [![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
 [![Platform](https://img.shields.io/badge/Platform-iOS%2015%2B%20%7C%20macOS%2012%2B-blue.svg)](https://developer.apple.com)
 [![SPM](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-brightgreen.svg)](https://swift.org/package-manager)
