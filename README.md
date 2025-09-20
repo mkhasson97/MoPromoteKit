@@ -32,7 +32,7 @@
     <tr>
       <td align="center">
         <h3>Full</h3>
-        <img src="https://github.com/user-attachments/assets/42a371ba-36c7-4093-be84-b2da7797115f" width="200" alt="Before">
+        <img src="https://github.com/user-attachments/assets/47d4d20f-97f9-4a1a-a6e0-d7e0ab0771e1" width="200" alt="Before">
       </td>
       <td align="center">
         <h3>Compact</h3>
