@@ -24,7 +24,7 @@ public struct DeveloperAppCard: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
             } placeholder: {
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 14)
                     .fill(Color.gray.opacity(0.3))
                     .overlay(
                         Image(systemName: "app.fill")
@@ -33,9 +33,9 @@ public struct DeveloperAppCard: View {
                     )
             }
             .frame(width: 60, height: 60)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 14)
                     .stroke(Color.secondary, lineWidth: 0.23)
             )
             
@@ -126,7 +126,7 @@ public struct DeveloperAppCompactCard: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
             } placeholder: {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: 10)
                     .fill(Color.gray.opacity(0.3))
                     .overlay(
                         Image(systemName: "app.fill")
@@ -135,7 +135,7 @@ public struct DeveloperAppCompactCard: View {
                     )
             }
             .frame(width: 40, height: 40)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
             
             // App Info (condensed)
             VStack(alignment: .leading, spacing: 2) {

@@ -1,5 +1,8 @@
 # MoPromoteKit
-
+<div align="center">
+<img src="https://github.com/user-attachments/assets/92d23a4b-e681-4786-9683-1795fcf53138" width="300" alt="Before">
+</div>
+  
 [![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
 [![Platform](https://img.shields.io/badge/Platform-iOS%2015%2B%20%7C%20macOS%2012%2B-blue.svg)](https://developer.apple.com)
 [![SPM](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-brightgreen.svg)](https://swift.org/package-manager)
@@ -10,10 +13,14 @@
 ## ✨ Features
 
 - 🌍 **Global Ratings Aggregation** - Combines ratings from 80+ App Store regions for more accurate data
+- 🎯 **Manual App Selection** - Promote specific apps by their IDs for curated collections
 - 🎨 **Beautiful SwiftUI Cards** - Ready-to-use cards with SF Symbol category icons
+- 👤 **Developer Profile Images** - Add developer avatars from URLs or local assets
+- 🔀 **Hybrid Promotion** - Combine featured apps with automatic developer discovery
 - 🚀 **Performance Optimized** - Concurrent API calls for fast loading
 - 🔧 **Highly Configurable** - Customize appearance, limits, and behavior
-- 📱 **Multiple Card Styles** - Regular and compact layouts
+- 📱 **Multiple Card Styles** - Regular, compact, and featured layouts
+- 📊 **Analytics Insights** - Built-in analytics for app performance tracking
 - 🌐 **80+ Country Support** - All major App Store regions included
 - 🧩 **Clean Architecture** - Modular, testable, and maintainable code
 - 📋 **Zero Dependencies** - Lightweight package with no external dependencies
@@ -110,7 +117,7 @@ struct MyApp: App {
 
 ## 📖 Usage Examples
 
-### 1. Settings Page Integration
+### 1. Auto-Discovery (Original Feature)
 
 Perfect for adding a "More Apps" section to your settings:
 
@@ -132,7 +139,68 @@ struct SettingsView: View {
 }
 ```
 
-### 2. Compact View for Smaller Spaces
+### 2. Manual App Selection (New!)
+
+Promote specific apps by their IDs for curated collections:
+
+```swift
+struct FeaturedAppsView: View {
+    var body: some View {
+        ScrollView {
+            // Manually select which apps to promote
+            MoPromoteKit.manualAppsView(appIds: [
+                1234567890,  // Your productivity app
+                9876543210,  // Your game
+                5555555555   // Your utility app
+            ])
+        }
+    }
+}
+```
+
+### 3. Hybrid Approach (New!)
+
+Combine featured apps with automatic developer discovery:
+
+```swift
+struct RecommendedAppsView: View {
+    var body: some View {
+        ScrollView {
+            MoPromoteKit.hybridAppsView(
+                featuredAppIds: [1234567890, 9876543210], // Featured prominently
+                currentAppId: 5555555555,                  // Your current app
+                maxAdditional: 3                           // Max additional developer apps
+            )
+        }
+    }
+}
+```
+
+### 4. Developer Profile Integration (New!)
+
+Add developer profile images to enhance branding:
+
+```swift
+struct SettingsView: View {
+    var body: some View {
+        ScrollView {
+            // With URL profile image
+            DeveloperAppsView.forSettings(
+                currentAppId: 1234567890,
+                developerProfile: .url("https://yoursite.com/developer-avatar.jpg")
+            )
+            
+            // Or with local asset
+            DeveloperAppsView.forSettings(
+                currentAppId: 1234567890,
+                developerProfile: .asset("developer_avatar")
+            )
+        }
+    }
+}
+```
+
+### 5. Compact View for Smaller Spaces
 
 Use the compact style for sidebars or smaller sections:
 
@@ -151,7 +219,7 @@ struct SidebarView: View {
 }
 ```
 
-### 3. Full-Screen Presentation
+### 6. Full-Screen Presentation
 
 For dedicated "More Apps" screens:
 
@@ -170,7 +238,29 @@ struct MoreAppsView: View {
 }
 ```
 
-### 4. Programmatic Usage
+### 7. Advanced Configuration (New!)
+
+Exclude specific apps and customize sorting:
+
+```swift
+struct CustomAppsView: View {
+    var body: some View {
+        ScrollView {
+            DeveloperAppsView(
+                currentAppId: 1234567890,
+                excludeAppIds: [9999999999], // Exclude competitor or deprecated apps
+                maxApps: 8,
+                cardStyle: .featured,
+                sortingOrder: .rating,       // Sort by highest rated
+                showAnalytics: true,         // Show analytics cards
+                developerProfile: .url("https://yoursite.com/avatar.jpg", size: 50)
+            )
+        }
+    }
+}
+```
+
+### 8. Programmatic Usage & Analytics (Enhanced!)
 
 Access the data programmatically for custom implementations:
 
@@ -181,13 +271,28 @@ class MyViewController: UIViewController {
         
         Task {
             do {
-                let apps = try await MoPromoteKit.fetchDeveloperApps(currentAppId: 1234567890)
-                print("Found \(apps.results.count) apps")
+                // Fetch specific apps
+                let specificApps = try await MoPromoteKit.fetchApps(appIds: [
+                    1234567890, 9876543210, 5555555555
+                ])
                 
-                // Process the apps data
-                for app in apps.results {
-                    print("\(app.trackName): \(app.displayRating)⭐ (\(app.displayRatingCount) reviews)")
-                }
+                // Fetch all developer apps with exclusions
+                let developerApps = try await MoPromoteKit.fetchDeveloperApps(
+                    currentAppId: 1234567890,
+                    excludeAppIds: [9999999999],
+                    includeCurrentApp: false
+                )
+                
+                // Get promotion insights
+                let insights = await MoPromoteKit.getPromotionInsights(appIds: [
+                    1234567890, 9876543210, 5555555555
+                ])
+                
+                print("Total download potential: \(insights.totalDownloadPotential)")
+                print("Average rating: \(insights.averageRating)")
+                print("Top performing app: \(insights.topPerformingApp?.trackName ?? "None")")
+                print("Recommended order: \(insights.recommendedPromotionOrder)")
+                
             } catch {
                 print("Error: \(error)")
             }
@@ -219,20 +324,72 @@ public struct Configuration {
     
     /// Cache duration for search results in seconds (default: 300)
     public var cacheDuration: TimeInterval = 300
+    
+    /// App selection mode (default: .allFromDeveloper)
+    public var appSelectionMode: AppSelectionMode = .allFromDeveloper(currentAppId: 0)
+    
+    /// Sorting order for apps (default: .alphabetical)
+    public var sortingOrder: SortingOrder = .alphabetical
+    
+    /// Custom title override
+    public var customTitle: String?
 }
 ```
 
-### Predefined Configurations
+### Card Styles (Enhanced!)
 
 ```swift
-// For settings pages
-MoPromoteKit.configure(.forSettings)
+public enum CardStyle {
+    case regular   // Standard detailed cards
+    case compact   // Smaller cards for tight spaces
+    case featured  // Large prominent cards with descriptions
+}
+```
 
-// For compact displays
-MoPromoteKit.configure(.compact)
+### Sorting Options (New!)
 
-// For full-screen displays
-MoPromoteKit.configure(.fullScreen)
+```swift
+public enum SortingOrder {
+    case alphabetical  // Sort by app name A-Z
+    case rating       // Sort by highest rating first
+    case releaseDate  // Sort by newest first
+    case downloads    // Sort by most reviews/downloads
+    case random       // Random shuffle
+    case custom([Int]) // Custom order by app IDs
+}
+```
+
+### App Selection Modes (New!)
+
+```swift
+public enum AppSelectionMode {
+    case allFromDeveloper(currentAppId: Int)
+    case manual(appIds: [Int])
+    case hybrid(featuredAppIds: [Int], currentAppId: Int, maxAdditional: Int)
+}
+```
+
+### Quick Configurations
+
+```swift
+// Manual app promotion
+MoPromoteKit.configureForManualPromotion(
+    appIds: [1234567890, 9876543210],
+    title: "Our Best Apps",
+    cardStyle: .featured
+)
+
+// Hybrid promotion
+MoPromoteKit.configureForHybridPromotion(
+    featuredAppIds: [1234567890, 9876543210],
+    currentAppId: 5555555555,
+    maxAdditional: 3
+)
+
+// Predefined configurations
+MoPromoteKit.configure(.forSettings)  // For settings pages
+MoPromoteKit.configure(.compact)      // For compact displays
+MoPromoteKit.configure(.fullScreen)   // For full-screen displays
 ```
 
 ## 🌍 Global Ratings Feature
@@ -272,6 +429,51 @@ Output example:
    ...
 ```
 
+## 👤 Developer Profile Images (New!)
+
+Add professional developer branding with profile images:
+
+### From URL
+```swift
+DeveloperAppsView.forSettings(
+    currentAppId: 1234567890,
+    developerProfile: .url("https://yoursite.com/developer-avatar.jpg")
+)
+```
+
+### From Local Assets
+```swift
+DeveloperAppsView.forSettings(
+    currentAppId: 1234567890,
+    developerProfile: .asset("developer_avatar") // Image in your app bundle
+)
+```
+
+### Custom Size
+```swift
+DeveloperAppsView.forSettings(
+    currentAppId: 1234567890,
+    developerProfile: .url("https://yoursite.com/avatar.jpg", size: 60)
+)
+```
+
+## 📊 Analytics & Insights (New!)
+
+Get detailed insights about your app promotion performance:
+
+```swift
+let insights = await MoPromoteKit.getPromotionInsights(appIds: [
+    1234567890, 9876543210, 5555555555
+])
+
+// Access insights data
+print("Total reviews across all apps: \(insights.totalDownloadPotential)")
+print("Combined average rating: \(insights.averageRating)")
+print("Best performing app: \(insights.topPerformingApp?.trackName ?? "None")")
+print("Categories represented: \(insights.categoryBreakdown)")
+print("Recommended promotion order: \(insights.recommendedPromotionOrder)")
+```
+
 ## 🎨 Customization
 
 ### Custom Card Styling
@@ -280,9 +482,10 @@ You can customize the appearance by modifying the configuration:
 
 ```swift
 MoPromoteKit.configure { config in
-    config.cardStyle = .compact
+    config.cardStyle = .featured
     config.maxApps = 5
     config.showTitle = false
+    config.sortingOrder = .rating
 }
 ```
 

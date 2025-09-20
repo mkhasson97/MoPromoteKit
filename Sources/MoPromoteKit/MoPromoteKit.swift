@@ -39,37 +39,56 @@ import SwiftUI
 @MainActor
 public struct MoPromoteKit {
     
+    // MARK: - App Selection Mode
+    
+    /// How apps should be selected for promotion
+    public enum AppSelectionMode {
+        /// Automatically fetch all apps from the same developer
+        case allFromDeveloper(currentAppId: Int)
+        /// Manually specify exact app IDs to promote
+        case manual(appIds: [Int])
+        /// Hybrid: specific apps + other developer apps (excluding specified ones)
+        case hybrid(featuredAppIds: [Int], currentAppId: Int, maxAdditional: Int = 5)
+    }
+    
     // MARK: - Configuration
     
     /// Global configuration for MoPromoteKit
     public struct Configuration {
         /// Maximum number of apps to display (default: 10)
         public var maxApps: Int = 10
-        
         /// Country code for App Store region (default: auto-detected)
         public var countryCode: String?
-        
         /// Whether to show the "More Apps" title (default: true)
         public var showTitle: Bool = true
-        
-        /// Card display style
+    
         public var cardStyle: CardStyle = .regular
-        
-        /// Enable global ratings aggregation (default: true)
         public var enableGlobalRatings: Bool = true
-        
-        /// Cache duration for search results in seconds (default: 300 = 5 minutes)
         public var cacheDuration: TimeInterval = 300
+        
+        // New properties
+        public var appSelectionMode: AppSelectionMode = .allFromDeveloper(currentAppId: 0)
+        public var sortingOrder: SortingOrder = .alphabetical
+        public var showDeveloperBranding: Bool = true
+        public var customTitle: String?
         
         public init() {}
     }
     
     /// Card display styles
     public enum CardStyle {
-        /// Full-size cards with detailed information
         case regular
-        /// Compact cards for smaller spaces
         case compact
+        case featured
+    }
+    
+    public enum SortingOrder {
+        case alphabetical
+        case rating
+        case releaseDate
+        case downloads
+        case random
+        case custom([Int]) // Custom order by app IDs
     }
     
     /// Shared configuration instance
@@ -80,9 +99,13 @@ public struct MoPromoteKit {
     /// Create a developer apps view for settings pages
     /// - Parameter currentAppId: The App Store ID of your current app
     /// - Returns: A SwiftUI view displaying other apps from the same developer
-    public static func developerAppsView(currentAppId: Int) -> some View {
+    public static func developerAppsView(
+        currentAppId: Int,
+        excludeAppIds: [Int] = []
+    ) -> some View {
         DeveloperAppsView(
             currentAppId: currentAppId,
+            excludeAppIds: excludeAppIds,
             maxApps: configuration.maxApps,
             showTitle: configuration.showTitle,
             cardStyle: configuration.cardStyle == .regular ? .regular : .compact
@@ -107,6 +130,32 @@ public struct MoPromoteKit {
     public static func fullScreenDeveloperAppsView(currentAppId: Int) -> some View {
         DeveloperAppsView.fullScreen(currentAppId: currentAppId)
     }
+    
+    /// Create a view with manual app selection
+        public static func manualAppsView(appIds: [Int]) -> some View {
+            ManualAppsView(
+                appIds: appIds,
+                maxApps: configuration.maxApps,
+                showTitle: configuration.showTitle,
+                cardStyle: configuration.cardStyle,
+                sortingOrder: configuration.sortingOrder
+            )
+        }
+        
+        /// Create a hybrid view (featured + developer apps)
+        public static func hybridAppsView(
+            featuredAppIds: [Int],
+            currentAppId: Int,
+            maxAdditional: Int = 5
+        ) -> some View {
+            HybridAppsView(
+                featuredAppIds: featuredAppIds,
+                currentAppId: currentAppId,
+                maxAdditional: maxAdditional,
+                showTitle: configuration.showTitle,
+                cardStyle: configuration.cardStyle
+            )
+        }
     
     // MARK: - Programmatic API
     
