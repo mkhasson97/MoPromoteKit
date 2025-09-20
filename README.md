@@ -38,6 +38,10 @@
         <h3>Compact</h3>
         <img src="https://github.com/user-attachments/assets/08692ce6-25db-4be2-ac12-b3ffba42325e" width="200" alt="After">
       </td>
+      <td align="center">
+        <h3>Featured App</h3>
+        <img src="https://github.com/user-attachments/assets/644e9e28-261e-4714-89d0-da4518a3a50e" width="200" alt="After">
+      </td>
     </tr>
   </table>
 </div>
