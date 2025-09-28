@@ -64,7 +64,7 @@ public struct DeveloperAppCard: View {
                             .fontWeight(.medium)
                             .foregroundColor(.secondary)
                         
-                        Text("\(app.displayRatingCount.formatted(.number.notation(.compactName)))")
+                        Text("(\(app.displayRatingCount.formatted(.number.notation(.compactName))))")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
