@@ -9,8 +9,8 @@ import SwiftUI
 
 public struct HybridAppsView: View {
     @StateObject private var searchManager = AppSearchManager()
-    @State private var featuredApps: [Result] = []
-    @State private var developerApps: [Result] = []
+    @State private var featuredApps: [AppResult] = []
+    @State private var developerApps: [AppResult] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var developerName: String = ""
@@ -313,7 +313,7 @@ public struct HybridAppsView: View {
     }
     
     @ViewBuilder
-    private func featuredAppCard(for app: Result) -> some View {
+    private func featuredAppCard(for app: AppResult) -> some View {
         switch featuredCardStyle {
         case .regular:
             DeveloperAppCard(app: app) {
@@ -331,7 +331,7 @@ public struct HybridAppsView: View {
     }
     
     @ViewBuilder
-    private func developerAppCard(for app: Result) -> some View {
+    private func developerAppCard(for app: AppResult) -> some View {
         switch cardStyle {
         case .regular:
             DeveloperAppCard(app: app) {
@@ -406,7 +406,7 @@ public struct HybridAppsView: View {
         return try JSONDecoder().decode(SearchResults.self, from: data)
     }
     
-    private func openAppInAppStore(app: Result) {
+    private func openAppInAppStore(app: AppResult) {
         guard let url = app.appStoreURL else { return }
         
         #if canImport(UIKit)
@@ -492,7 +492,7 @@ public extension HybridAppsView {
 #Preview("Hybrid Settings View") {
     ScrollView {
         HybridAppsView.forSettings(
-            featuredAppIds: [123456789, 987654321],
+            featuredAppIds: [1577859348, 987654321],
             currentAppId: 1577859348,
             maxAdditional: 3
         )
@@ -504,7 +504,7 @@ public extension HybridAppsView {
 #Preview("Compact Hybrid View") {
     ScrollView {
         HybridAppsView.compact(
-            featuredAppIds: [123456789, 987654321],
+            featuredAppIds: [1577859348, 987654321],
             currentAppId: 1577859348,
             maxAdditional: 2
         )
@@ -516,7 +516,7 @@ public extension HybridAppsView {
 #Preview("Featured Only View") {
     ScrollView {
         HybridAppsView.featuredOnly(
-            featuredAppIds: [123456789, 987654321, 456789123],
+            featuredAppIds: [1577859348, 987654321, 456789123],
             currentAppId: 1577859348
         )
         .padding(.top)

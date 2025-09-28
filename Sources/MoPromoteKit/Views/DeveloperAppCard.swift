@@ -8,10 +8,10 @@
 import SwiftUI
 
 public struct DeveloperAppCard: View {
-    let app: Result
+    let app: AppResult
     let onDownloadTapped: () -> Void
     
-    public init(app: Result, onDownloadTapped: @escaping () -> Void) {
+    public init(app: AppResult, onDownloadTapped: @escaping () -> Void) {
         self.app = app
         self.onDownloadTapped = onDownloadTapped
     }
@@ -64,7 +64,7 @@ public struct DeveloperAppCard: View {
                             .fontWeight(.medium)
                             .foregroundColor(.secondary)
                         
-                        Text("(\(app.displayRatingCount.formatted()))")
+                        Text("\(app.displayRatingCount.formatted(.number.notation(.compactName)))")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -93,8 +93,8 @@ public struct DeveloperAppCard: View {
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
                     .background(Color.blue)
                     .clipShape(Capsule())
             }
@@ -110,10 +110,10 @@ public struct DeveloperAppCard: View {
 // MARK: - Compact Version
 
 public struct DeveloperAppCompactCard: View {
-    let app: Result
+    let app: AppResult
     let onDownloadTapped: () -> Void
     
-    public init(app: Result, onDownloadTapped: @escaping () -> Void) {
+    public init(app: AppResult, onDownloadTapped: @escaping () -> Void) {
         self.app = app
         self.onDownloadTapped = onDownloadTapped
     }
@@ -194,14 +194,14 @@ public struct DeveloperAppCompactCard: View {
 #if DEBUG
 #Preview("Regular Card") {
     VStack(spacing: 12) {
-        DeveloperAppCard(app: Result.sample) {
+        DeveloperAppCard(app: AppResult.sample) {
             print("Download tapped")
         }
         
         DeveloperAppCard(app: {
-            var sample = Result.sample
+            var sample = AppResult.sample
             // Simulate paid app
-            return Result(
+            return AppResult(
                 trackId: sample.trackId,
                 trackViewUrl: sample.trackViewUrl,
                 trackName: "Pro App with Long Name That Might Wrap",
@@ -246,11 +246,11 @@ public struct DeveloperAppCompactCard: View {
 
 #Preview("Compact Card") {
     VStack(spacing: 8) {
-        DeveloperAppCompactCard(app: Result.sample) {
+        DeveloperAppCompactCard(app: AppResult.sample) {
             print("Compact download tapped")
         }
         
-        DeveloperAppCompactCard(app: Result.sample) {
+        DeveloperAppCompactCard(app: AppResult.sample) {
             print("Compact download tapped")
         }
     }

@@ -10,7 +10,7 @@ import SwiftUI
 public struct DeveloperAppsView: View {
     @StateObject private var searchManager = AppSearchManager()
     let developerProfile: DeveloperProfile
-    @State private var developerApps: [Result] = []
+    @State private var developerApps: [AppResult] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var developerName: String = ""
@@ -238,7 +238,7 @@ public struct DeveloperAppsView: View {
                 }
                 
                 if totalGlobalRatings > 0 {
-                    Text("\(totalGlobalRatings.formatted()) Reviews")
+                    Text("\(totalGlobalRatings.formatted(.number.notation(.compactName))) Reviews")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -299,7 +299,7 @@ public struct DeveloperAppsView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
     
-    private var sortedApps: [Result] {
+    private var sortedApps: [AppResult] {
         switch sortingOrder {
         case .alphabetical:
             return developerApps.sorted { $0.trackName < $1.trackName }
@@ -326,7 +326,7 @@ public struct DeveloperAppsView: View {
     }
     
     @ViewBuilder
-    private func appCard(for app: Result) -> some View {
+    private func appCard(for app: AppResult) -> some View {
         switch cardStyle {
         case .regular:
             DeveloperAppCard(app: app) {
@@ -412,7 +412,7 @@ public struct DeveloperAppsView: View {
         return try JSONDecoder().decode(SearchResults.self, from: data)
     }
     
-    private func openAppInAppStore(app: Result) {
+    private func openAppInAppStore(app: AppResult) {
         guard let url = app.appStoreURL else { return }
         
 #if canImport(UIKit)
@@ -517,10 +517,10 @@ public extension DeveloperAppsView {
 // MARK: - Featured App Card
 
 public struct FeaturedAppCard: View {
-    let app: Result
+    let app: AppResult
     let onDownloadTapped: () -> Void
     
-    public init(app: Result, onDownloadTapped: @escaping () -> Void) {
+    public init(app: AppResult, onDownloadTapped: @escaping () -> Void) {
         self.app = app
         self.onDownloadTapped = onDownloadTapped
     }
@@ -642,14 +642,15 @@ public struct FeaturedAppCard: View {
 }
 
 // MARK: - Preview Support
-
 #if DEBUG
-#Preview("Enhanced Regular View") {
+#Preview("Debug API Test") {
     ScrollView {
-        DeveloperAppsView.forSettings(currentAppId: 1577859348, excludeAppIds: [123456789])
-            .padding(.top)
+//        DeveloperAppsView.forSettings(currentAppId: 1577859348)
+        DeveloperAppsView(currentAppId: 389801252, maxApps: 20, showTitle: true, includeCurrentApp: true, showAnalytics: true, developerProfile: .url("https://mkhasson97.com/assets/Profile.png"))
     }
-    .background(Color(.systemGroupedBackground))
+    .task {
+        let searchManager = AppSearchManager()
+    }
 }
 
 #Preview("Regular View with Picture") {
@@ -678,7 +679,7 @@ public struct FeaturedAppCard: View {
 
 #Preview("Featured Card") {
     VStack(spacing: 16) {
-        FeaturedAppCard(app: Result.sample) {
+        FeaturedAppCard(app: AppResult.sample) {
             print("Featured app tapped")
         }
     }

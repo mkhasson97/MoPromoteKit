@@ -170,10 +170,10 @@ public struct MoPromoteKit {
     /// Get global ratings debug information
     /// - Parameter appId: The App Store ID to analyze
     /// - Returns: Detailed global ratings analysis string
-    public static func debugGlobalRatings(appId: Int) async -> String {
-        let manager = AppSearchManager(countryCode: configuration.countryCode)
-        return await manager.debugGlobalRatings(appId: appId)
-    }
+//    public static func debugGlobalRatings(appId: Int) async -> String {
+//        let manager = AppSearchManager(countryCode: configuration.countryCode)
+//        return await manager.debugGlobalRatings(appId: appId)
+//    }
     
     // MARK: - Configuration Methods
     
@@ -217,7 +217,7 @@ public extension MoPromoteKit.Configuration {
     /// Configuration for settings pages
     static var forSettings: MoPromoteKit.Configuration {
         var config = MoPromoteKit.Configuration()
-        config.maxApps = 6
+        config.maxApps = 60
         config.showTitle = true
         config.cardStyle = .regular
         return config

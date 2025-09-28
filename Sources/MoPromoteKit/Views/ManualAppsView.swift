@@ -9,7 +9,7 @@ import SwiftUI
 
 public struct ManualAppsView: View {
     @StateObject private var searchManager = AppSearchManager()
-    @State private var apps: [Result] = []
+    @State private var apps: [AppResult] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
     
@@ -113,7 +113,7 @@ public struct ManualAppsView: View {
         .padding(.horizontal, 16)
     }
     
-    private var sortedApps: [Result] {
+    private var sortedApps: [AppResult] {
         switch sortingOrder {
         case .alphabetical:
             return apps.sorted { $0.trackName < $1.trackName }
@@ -135,7 +135,7 @@ public struct ManualAppsView: View {
     }
     
     @ViewBuilder
-    private func appCard(for app: Result) -> some View {
+    private func appCard(for app: AppResult) -> some View {
         switch cardStyle {
         case .regular:
             DeveloperAppCard(app: app) {
@@ -166,7 +166,7 @@ public struct ManualAppsView: View {
         }
     }
     
-    private func openAppInAppStore(app: Result) {
+    private func openAppInAppStore(app: AppResult) {
         guard let url = app.appStoreURL else { return }
         
         #if canImport(UIKit)
@@ -181,7 +181,7 @@ public struct ManualAppsView: View {
 #Preview("Manual Apps - Regular Cards") {
     ScrollView {
         ManualAppsView(
-            appIds: [1577859348, 123456789, 987654321],
+            appIds: [1577859348, 389801252],
             maxApps: 10,
             showTitle: true,
             cardStyle: .regular,

@@ -9,15 +9,15 @@ import Foundation
 
 public struct SearchResults: Decodable, Sendable {
     public let resultCount: Int
-    public let results: [Result]
+    public let results: [AppResult]
     
-    public init(resultCount: Int, results: [Result]) {
+    public init(resultCount: Int, results: [AppResult]) {
         self.resultCount = resultCount
         self.results = results
     }
 }
 
-public struct Result: Decodable, Hashable, Identifiable, Sendable {
+public struct AppResult: Decodable, Hashable, Identifiable, Sendable {
     public let trackId: Int
     public let trackViewUrl: String
     public let trackName: String
@@ -237,11 +237,10 @@ public struct Result: Decodable, Hashable, Identifiable, Sendable {
 }
 
 // MARK: - Extensions for easier handling
-
-public extension Result {
-    /// Create a sample app for previews and testing
-    static var sample: Result {
-        return Result(
+public extension AppResult {
+    // Create a sample app for previews and testing
+    static var sample: AppResult {
+        return AppResult(
             trackId: 123456789,
             trackViewUrl: "https://apps.apple.com/app/id123456789",
             trackName: "Sample App Name",
@@ -284,7 +283,7 @@ public extension SearchResults {
     static var sample: SearchResults {
         return SearchResults(
             resultCount: 1,
-            results: [Result.sample]
+            results: [AppResult.sample]
         )
     }
     

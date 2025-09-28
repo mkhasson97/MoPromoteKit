@@ -1,6 +1,6 @@
 //
 //  AppSearchManager.swift
-//  MoPromoteKit
+//  MoPromoteKit - Cleaned and Optimized
 //
 //  Created by Mohammad Alhasson on 17.06.25.
 //
@@ -22,12 +22,14 @@ public class AppSearchManager: ObservableObject {
         self.primaryCountryCode = countryCode ?? CountrySettings.shared.selectedCountry
     }
     
-    // MARK: - Public API
-    /// Fetch all apps from the same developer with enhanced global ratings
+    // MARK: - Main API
+    
+    /// Fetch all apps from the same developer
     public func fetchDeveloperApps(
         appId: Int,
         excludeAppIds: [Int] = [],
-        includeCurrentApp: Bool = false
+        includeCurrentApp: Bool = false,
+        maxApps: Int? = nil
     ) async throws -> SearchResults {
         let cacheKey = "developer_\(appId)_exclude_\(excludeAppIds.sorted().map(String.init).joined(separator: "_"))"
         if let cached = getCachedResult(key: cacheKey) {
@@ -40,20 +42,20 @@ public class AppSearchManager: ObservableObject {
             throw AppSearchError.noAppFound
         }
         
-        // Search for all apps by this developer
+        // Get all apps from the same developer
         var excludeIds = excludeAppIds
         if !includeCurrentApp {
             excludeIds.append(appId)
         }
         
-        let developerApps = try await searchAppsByDeveloper(
-            developerName: app.artistName,
+        let developerApps = try await searchByArtistId(
+            artistId: app.artistId ?? 0,
             excludingAppIds: excludeIds
         )
         
         // Enhance each app with global ratings
-        let enhancedApps = await withTaskGroup(of: Result.self, returning: [Result].self) { group in
-            var results: [Result] = []
+        let enhancedApps = await withTaskGroup(of: AppResult.self, returning: [AppResult].self) { group in
+            var results: [AppResult] = []
             
             for app in developerApps.results {
                 group.addTask { [weak self] in
@@ -69,185 +71,80 @@ public class AppSearchManager: ObservableObject {
             return results.sorted { $0.trackName < $1.trackName }
         }
         
-        let searchResults = SearchResults(resultCount: enhancedApps.count, results: enhancedApps)
+        // Apply maxApps limit if specified
+        let finalApps = if let maxApps = maxApps {
+            Array(enhancedApps.prefix(maxApps))
+        } else {
+            enhancedApps
+        }
+        
+        let searchResults = SearchResults(resultCount: finalApps.count, results: finalApps)
         setCachedResult(key: cacheKey, data: searchResults)
         return searchResults
     }
     
-    /// Fetch specific apps by their IDs with enhanced global ratings
-    public func fetchSpecificApps(appIds: [Int]) async throws -> SearchResults {
-        // Check cache first
-        let cacheKey = "manual_\(appIds.sorted().map(String.init).joined(separator: "_"))"
-        if let cached = getCachedResult(key: cacheKey) {
-            return cached
+    // MARK: - Core Search Method
+    
+    private func searchByArtistId(artistId: Int, excludingAppIds: [Int]) async throws -> SearchResults {
+        guard artistId > 0 else {
+            throw AppSearchError.noAppFound
         }
         
-        let enhancedApps = await withTaskGroup(of: Result?.self, returning: [Result].self) { group in
-            var results: [Result] = []
-            
-            for appId in appIds {
-                group.addTask { [weak self] in
-                    guard let self = self else { return nil }
-                    do {
-                        let appDetails = try await self.fetchAppDetails(appId: appId)
-                        guard let app = appDetails.results.first else { return nil }
-                        return await self.enhanceAppWithGlobalRatings(app: app)
-                    } catch {
-                        print("Failed to fetch app \(appId): \(error)")
-                        return nil
-                    }
-                }
-            }
-            
-            for await app in group {
-                if let app = app {
-                    results.append(app)
-                }
-            }
-            
-            // Maintain the order of input appIds
-            return appIds.compactMap { targetId in
-                results.first { $0.trackId == targetId }
-            }
-        }
+        let directUrl = "https://itunes.apple.com/lookup?id=\(artistId)&entity=software&country=\(primaryCountryCode)"
         
-        let searchResults = SearchResults(resultCount: enhancedApps.count, results: enhancedApps)
-        setCachedResult(key: cacheKey, data: searchResults)
-        return searchResults
-    }
-    
-    /// Get promotion insights for specific apps
-    public func getPromotionInsights(appIds: [Int]) async -> PromotionInsights {
-        do {
-            let results = try await fetchSpecificApps(appIds: appIds)
-            let apps = results.results
-            
-            let totalDownloads = apps.reduce(0) { $0 + ($1.userRatingCount ?? 0) }
-            let avgRating = apps.isEmpty ? 0.0 : apps.reduce(0.0) { $0 + $1.displayRating } / Double(apps.count)
-            let topApp = apps.max(by: { $0.displayRating < $1.displayRating })
-            
-            // Category breakdown
-            var categoryBreakdown: [String: Int] = [:]
-            for app in apps {
-                let category = app.displayGenre
-                categoryBreakdown[category, default: 0] += 1
-            }
-            
-            // Recommended order (by rating and download count)
-            let recommendedOrder = apps
-                .sorted { app1, app2 in
-                    let score1 = app1.displayRating * Double(app1.displayRatingCount)
-                    let score2 = app2.displayRating * Double(app2.displayRatingCount)
-                    return score1 > score2
-                }
-                .map { $0.trackId }
-            
-            return PromotionInsights(
-                totalDownloadPotential: totalDownloads,
-                averageRating: avgRating,
-                topPerformingApp: topApp,
-                categoryBreakdown: categoryBreakdown,
-                recommendedPromotionOrder: recommendedOrder
-            )
-        } catch {
-            return PromotionInsights(
-                totalDownloadPotential: 0,
-                averageRating: 0.0,
-                topPerformingApp: nil,
-                categoryBreakdown: [:],
-                recommendedPromotionOrder: []
-            )
-        }
-    }
-    
-    /// Legacy method for backward compatibility with @Sendable closure
-    public func fetchAppsFromAppstore(
-        software: String,
-        searchText: String,
-        completion: @escaping @Sendable (SearchResults) -> Void
-    ) {
-        let urlString = "https://itunes.apple.com/\(primaryCountryCode)/search?term=\(searchText)&entity=\(software)"
-        guard let safeURL = urlString.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed),
-              let url = URL(string: safeURL) else { return }
-        
-        URLSession.shared.dataTask(with: url) { data, _, error in
-            if let error = error {
-                print("Search error: \(error.localizedDescription)")
-                return
-            }
-            
-            guard let data = data else { return }
-            
-            do {
-                let apps = try JSONDecoder().decode(SearchResults.self, from: data)
-                Task { @MainActor in
-                    completion(apps)
-                }
-            } catch {
-                print("Decoding error: \(error.localizedDescription)")
-            }
-        }.resume()
-    }
-    
-    // MARK: - Private Implementation
-    private func fetchAppDetails(appId: Int) async throws -> SearchResults {
-        let urlString = "https://itunes.apple.com/\(primaryCountryCode)/lookup?id=\(appId)"
-        guard let url = URL(string: urlString) else {
+        guard let url = URL(string: directUrl) else {
             throw AppSearchError.invalidURL
         }
         
-        let (data, _) = try await URLSession.shared.data(from: url)
-        return try JSONDecoder().decode(SearchResults.self, from: data)
-    }
-    
-    private func searchAppsByDeveloper(
-        developerName: String,
-        excludingAppIds: [Int]
-    ) async throws -> SearchResults {
-        let searchStrategies = [
-            "\(developerName)&entity=software&attribute=softwareDeveloper",
-            "\(developerName)&entity=software",
-            "\"" + developerName + "\"" + "&entity=software"
-        ]
-        
-        var allResults: [Result] = []
-        var seenIds = Set<Int>()
-        
-        for strategy in searchStrategies {
-            let urlString = "https://itunes.apple.com/\(primaryCountryCode)/search?term=\(strategy)"
-            guard let safeURL = urlString.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed),
-                  let url = URL(string: safeURL) else {
-                continue
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                throw AppSearchError.networkError("HTTP \(httpResponse.statusCode)")
             }
             
-            do {
-                let (data, _) = try await URLSession.shared.data(from: url)
-                let searchResults = try JSONDecoder().decode(SearchResults.self, from: data)
-                
-                for result in searchResults.results {
-                    if result.artistName.lowercased() == developerName.lowercased() &&
-                        !seenIds.contains(result.trackId) &&
-                        !excludingAppIds.contains(result.trackId) {
-                        allResults.append(result)
-                        seenIds.insert(result.trackId)
-                    }
-                }
-            } catch {
-                continue // Try next strategy
+            // Parse JSON manually to handle mixed response types (artist + apps)
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let rawResults = json["results"] as? [[String: Any]] else {
+                throw AppSearchError.decodingError("Invalid JSON structure")
             }
+            
+            // Filter and decode only app entries
+            var appResults: [AppResult] = []
+            for rawResult in rawResults {
+                // Skip artist entries - they don't have trackId
+                guard rawResult["trackId"] != nil else { continue }
+                
+                do {
+                    let resultData = try JSONSerialization.data(withJSONObject: rawResult)
+                    let appResult = try JSONDecoder().decode(AppResult.self, from: resultData)
+                    
+                    // Filter by artist ID and excluded apps
+                    if appResult.artistId == artistId && !excludingAppIds.contains(appResult.trackId) {
+                        appResults.append(appResult)
+                    }
+                } catch {
+                    continue // Skip invalid entries
+                }
+            }
+            
+            return SearchResults(resultCount: appResults.count, results: appResults)
+            
+        } catch {
+            throw AppSearchError.networkError(error.localizedDescription)
         }
-        
-        return SearchResults(resultCount: allResults.count, results: allResults)
     }
     
-    private func enhanceAppWithGlobalRatings(app: Result) async -> Result {
+    // MARK: - Global Ratings Enhancement
+    
+    private func enhanceAppWithGlobalRatings(app: AppResult) async -> AppResult {
         let globalRatings = await fetchGlobalRatingsData(appId: app.trackId)
         
         let bestRating = globalRatings.isEmpty ? app.averageUserRating : globalRatings.max(by: { $0.rating < $1.rating })?.rating
         let totalReviews = globalRatings.reduce(0) { $0 + $1.count }
         let weightedAverage = calculateWeightedAverage(ratings: globalRatings)
         
-        return Result(
+        return AppResult(
             trackId: app.trackId,
             trackViewUrl: app.trackViewUrl,
             trackName: app.trackName,
@@ -288,6 +185,7 @@ public class AppSearchManager: ObservableObject {
         return await withTaskGroup(of: (Double, Int)?.self, returning: [(rating: Double, count: Int)].self) { group in
             var ratings: [(rating: Double, count: Int)] = []
             
+            // Fetch from all major markets for comprehensive data
             for countryCode in CountrySettings.majorMarkets {
                 group.addTask { [weak self] in
                     guard let self = self else { return nil }
@@ -335,32 +233,113 @@ public class AppSearchManager: ObservableObject {
         return totalCount > 0 ? totalWeightedSum / Double(totalCount) : nil
     }
     
-    /// Batch fetch apps with progress reporting
-    public func fetchAppsWithProgress(
-        appIds: [Int],
-        progressHandler: @escaping (Double) -> Void
-    ) async throws -> SearchResults {
-        var results: [Result] = []
-        let total = Double(appIds.count)
+    // MARK: - Additional API Methods
+    
+    /// Fetch specific apps by their IDs
+    public func fetchSpecificApps(appIds: [Int]) async throws -> SearchResults {
+        let cacheKey = "manual_\(appIds.sorted().map(String.init).joined(separator: "_"))"
+        if let cached = getCachedResult(key: cacheKey) {
+            return cached
+        }
         
-        for (index, appId) in appIds.enumerated() {
-            do {
-                let appDetails = try await fetchAppDetails(appId: appId)
-                if let app = appDetails.results.first {
-                    let enhancedApp = await enhanceAppWithGlobalRatings(app: app)
-                    results.append(enhancedApp)
+        let enhancedApps = await withTaskGroup(of: AppResult?.self, returning: [AppResult].self) { group in
+            var results: [AppResult] = []
+            
+            for appId in appIds {
+                group.addTask { [weak self] in
+                    guard let self = self else { return nil }
+                    do {
+                        let appDetails = try await self.fetchAppDetails(appId: appId)
+                        guard let app = appDetails.results.first else { return nil }
+                        return await self.enhanceAppWithGlobalRatings(app: app)
+                    } catch {
+                        return nil
+                    }
                 }
-            } catch {
-                print("Failed to fetch app \(appId): \(error)")
             }
             
-            let progress = Double(index + 1) / total
-            await MainActor.run {
-                progressHandler(progress)
+            for await app in group {
+                if let app = app {
+                    results.append(app)
+                }
+            }
+            
+            return appIds.compactMap { targetId in
+                results.first { $0.trackId == targetId }
             }
         }
         
-        return SearchResults(resultCount: results.count, results: results)
+        let searchResults = SearchResults(resultCount: enhancedApps.count, results: enhancedApps)
+        setCachedResult(key: cacheKey, data: searchResults)
+        return searchResults
+    }
+    
+    /// Get promotion insights for specific apps
+    public func getPromotionInsights(appIds: [Int]) async -> PromotionInsights {
+        do {
+            let results = try await fetchSpecificApps(appIds: appIds)
+            let apps = results.results
+            
+            let totalDownloads = apps.reduce(0) { $0 + ($1.userRatingCount ?? 0) }
+            let avgRating = apps.isEmpty ? 0.0 : apps.reduce(0.0) { $0 + $1.displayRating } / Double(apps.count)
+            let topApp = apps.max(by: { $0.displayRating < $1.displayRating })
+            
+            var categoryBreakdown: [String: Int] = [:]
+            for app in apps {
+                let category = app.displayGenre
+                categoryBreakdown[category, default: 0] += 1
+            }
+            
+            let recommendedOrder = apps
+                .sorted { app1, app2 in
+                    let score1 = app1.displayRating * Double(app1.displayRatingCount)
+                    let score2 = app2.displayRating * Double(app2.displayRatingCount)
+                    return score1 > score2
+                }
+                .map { $0.trackId }
+            
+            return PromotionInsights(
+                totalDownloadPotential: totalDownloads,
+                averageRating: avgRating,
+                topPerformingApp: topApp,
+                categoryBreakdown: categoryBreakdown,
+                recommendedPromotionOrder: recommendedOrder
+            )
+        } catch {
+            return PromotionInsights(
+                totalDownloadPotential: 0,
+                averageRating: 0.0,
+                topPerformingApp: nil,
+                categoryBreakdown: [:],
+                recommendedPromotionOrder: []
+            )
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func fetchAppDetails(appId: Int) async throws -> SearchResults {
+        let countries = [primaryCountryCode, "us", "gb"]
+        
+        for country in countries {
+            let urlString = "https://itunes.apple.com/\(country)/lookup?id=\(appId)"
+            guard let url = URL(string: urlString) else { continue }
+            
+            do {
+                let (data, response) = try await URLSession.shared.data(from: url)
+                
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                    let result = try JSONDecoder().decode(SearchResults.self, from: data)
+                    if !result.results.isEmpty {
+                        return result
+                    }
+                }
+            } catch {
+                continue
+            }
+        }
+        
+        throw AppSearchError.noAppFound
     }
     
     // MARK: - Cache Management
@@ -385,39 +364,39 @@ public class AppSearchManager: ObservableObject {
         cache.removeAll()
     }
     
-    // Legacy compatibility
+    // MARK: - Legacy Compatibility
+    
     public func fetchDeveloperApps(appId: Int) async throws -> SearchResults {
-        return try await fetchDeveloperApps(appId: appId, excludeAppIds: [], includeCurrentApp: false)
+        return try await fetchDeveloperApps(appId: appId, excludeAppIds: [], includeCurrentApp: false, maxApps: nil)
     }
     
-    // MARK: - Debug Methods
-    
-    public func debugGlobalRatings(appId: Int) async -> String {
-        var output = "🌍 Global Ratings Analysis for App ID: \(appId)\n"
-        output += String(repeating: "=", count: 50) + "\n\n"
+    /// Legacy method for backward compatibility
+    public func fetchAppsFromAppstore(
+        software: String,
+        searchText: String,
+        completion: @escaping @Sendable (SearchResults) -> Void
+    ) {
+        let urlString = "https://itunes.apple.com/\(primaryCountryCode)/search?term=\(searchText)&entity=\(software)"
+        guard let safeURL = urlString.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed),
+              let url = URL(string: safeURL) else { return }
         
-        let ratings = await fetchGlobalRatingsData(appId: appId)
-        
-        if ratings.isEmpty {
-            output += "❌ No ratings found in any major market\n"
-            return output
-        }
-        
-        let sortedRatings = ratings.sorted { $0.count > $1.count }
-        let weightedAverage = calculateWeightedAverage(ratings: ratings)
-        let totalReviews = ratings.reduce(0) { $0 + $1.count }
-        
-        output += "📊 Summary:\n"
-        output += "   • Total Reviews: \(totalReviews.formatted())\n"
-        output += "   • Weighted Average: \(String(format: "%.2f", weightedAverage ?? 0))⭐\n"
-        output += "   • Markets with data: \(ratings.count)/\(CountrySettings.majorMarkets.count)\n\n"
-        
-        output += "🌟 Top Markets:\n"
-        for (index, rating) in sortedRatings.prefix(10).enumerated() {
-            output += "   \(index + 1). \(String(format: "%.1f", rating.rating))⭐ (\(rating.count.formatted()) reviews)\n"
-        }
-        
-        return output
+        URLSession.shared.dataTask(with: url) { data, _, error in
+            if let error = error {
+                print("Search error: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let data = data else { return }
+            
+            do {
+                let apps = try JSONDecoder().decode(SearchResults.self, from: data)
+                Task { @MainActor in
+                    completion(apps)
+                }
+            } catch {
+                print("Decoding error: \(error.localizedDescription)")
+            }
+        }.resume()
     }
 }
 
