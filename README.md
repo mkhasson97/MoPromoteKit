@@ -31,18 +31,34 @@
   <table>
     <tr>
       <td align="center">
-        <h3>Full</h3>
-        <img src="https://github.com/user-attachments/assets/42a371ba-36c7-4093-be84-b2da7797115f" width="200" alt="Before">
+        <h3>Regular View</h3>
+        <img src="https://github.com/user-attachments/assets/816db2e6-421b-4228-8c57-86a4b60fdde3" width="200" alt="Before">
       </td>
       <td align="center">
-        <h3>Compact</h3>
-        <img src="https://github.com/user-attachments/assets/08692ce6-25db-4be2-ac12-b3ffba42325e" width="200" alt="After">
+        <h3>Featured View</h3>
+        <img src="https://github.com/user-attachments/assets/26eb0578-b18a-4a23-9276-262f57e2f12f" width="200" alt="After">
+      </td>
+    <td align="center">
+        <h3>Discovery View</h3>
+        <img src="https://github.com/user-attachments/assets/182a68e4-ec7a-4e17-b2a7-a727e7dd7ba3" width="200" alt="After">
+      </td>
+    </tr>
+        <tr>
+      <td align="center">
+        <h3>All Size Options</h3>
+        <img src="https://github.com/user-attachments/assets/8f914eea-04bc-41c3-aa91-08dfc2fe0bc7" width="200" alt="Before">
+      </td>
+      <td align="center">
+        <h3>Default Horizontal</h3>
+        <img src="https://github.com/user-attachments/assets/6adfae9e-f16c-4ea0-bc68-534c45141071" width="200" alt="After">
+      </td>
+    <td align="center">
+        <h3>Compact Horizontal </h3>
+        <img src="https://github.com/user-attachments/assets/d17327a4-cb6b-4887-aa27-eb7bec74cd48" width="200" alt="After">
       </td>
     </tr>
   </table>
 </div>
-
-## 🚀 Quick Start
 
 ## 🚀 Installation
 
@@ -139,7 +155,7 @@ struct SettingsView: View {
 }
 ```
 
-### 2. Manual App Selection (New!)
+### 2. Manual App Selection
 
 Promote specific apps by their IDs for curated collections:
 
@@ -158,7 +174,7 @@ struct FeaturedAppsView: View {
 }
 ```
 
-### 3. Hybrid Approach (New!)
+### 3. Hybrid Approach
 
 Combine featured apps with automatic developer discovery:
 
@@ -176,7 +192,7 @@ struct RecommendedAppsView: View {
 }
 ```
 
-### 4. Developer Profile Integration (New!)
+### 4. Developer Profile Integration
 
 Add developer profile images to enhance branding:
 
@@ -238,7 +254,7 @@ struct MoreAppsView: View {
 }
 ```
 
-### 7. Advanced Configuration (New!)
+### 7. Advanced Configuration
 
 Exclude specific apps and customize sorting:
 
@@ -346,7 +362,7 @@ public enum CardStyle {
 }
 ```
 
-### Sorting Options (New!)
+### Sorting Options
 
 ```swift
 public enum SortingOrder {
@@ -359,7 +375,7 @@ public enum SortingOrder {
 }
 ```
 
-### App Selection Modes (New!)
+### App Selection Modes
 
 ```swift
 public enum AppSelectionMode {
@@ -429,7 +445,7 @@ Output example:
    ...
 ```
 
-## 👤 Developer Profile Images (New!)
+## 👤 Developer Profile Images
 
 Add professional developer branding with profile images:
 
@@ -457,7 +473,7 @@ DeveloperAppsView.forSettings(
 )
 ```
 
-## 📊 Analytics & Insights (New!)
+## 📊 Analytics & Insights
 
 Get detailed insights about your app promotion performance:
 

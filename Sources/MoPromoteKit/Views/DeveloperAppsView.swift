@@ -617,8 +617,8 @@ public struct FeaturedAppCard: View {
                     .font(.callout)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 8)
                     .background(
                         LinearGradient(
                             colors: [.blue, .blue.opacity(0.8)],
@@ -643,16 +643,6 @@ public struct FeaturedAppCard: View {
 
 // MARK: - Preview Support
 #if DEBUG
-#Preview("Debug API Test") {
-    ScrollView {
-//        DeveloperAppsView.forSettings(currentAppId: 1577859348)
-        DeveloperAppsView(currentAppId: 389801252, maxApps: 20, showTitle: true, includeCurrentApp: true, showAnalytics: true, developerProfile: .url("https://mkhasson97.com/assets/Profile.png"))
-    }
-    .task {
-        let searchManager = AppSearchManager()
-    }
-}
-
 #Preview("Regular View with Picture") {
     ScrollView {
         DeveloperAppsView.forSettings(currentAppId: 1577859348, developerProfile: .url("https://mkhasson97.com/assets/Profile.png"))
@@ -671,19 +661,9 @@ public struct FeaturedAppCard: View {
 
 #Preview("Discovery View") {
     ScrollView {
-        DeveloperAppsView.discovery(currentAppId: 1577859348, maxApps: 2)
+        DeveloperAppsView.discovery(currentAppId: 1577859348, maxApps: 10)
             .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
-}
-
-#Preview("Featured Card") {
-    VStack(spacing: 16) {
-        FeaturedAppCard(app: AppResult.sample) {
-            print("Featured app tapped")
-        }
-    }
-    .padding()
     .background(Color(.systemGroupedBackground))
 }
 #endif
