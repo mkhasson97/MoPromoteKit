@@ -43,12 +43,20 @@ public struct MoPromoteKit {
     
     /// How apps should be selected for promotion
     public enum AppSelectionMode {
-        /// Automatically fetch all apps from the same developer
+        /// Automatically fetch all apps from the same developer (by App Store ID)
         case allFromDeveloper(currentAppId: Int)
+        /// Automatically fetch all apps from the same developer (by Bundle ID)
+        case allFromDeveloperByBundleId(currentBundleId: String)
+        /// Automatically detect the current app's bundle ID
+        case autoDetect
         /// Manually specify exact app IDs to promote
         case manual(appIds: [Int])
+        /// Manually specify exact bundle IDs to promote
+        case manualByBundleId(bundleIds: [String])
         /// Hybrid: specific apps + other developer apps (excluding specified ones)
         case hybrid(featuredAppIds: [Int], currentAppId: Int, maxAdditional: Int = 5)
+        /// Hybrid using bundle IDs
+        case hybridByBundleId(featuredBundleIds: [String], currentBundleId: String, maxAdditional: Int = 5)
     }
     
     // MARK: - Configuration
@@ -94,9 +102,9 @@ public struct MoPromoteKit {
     /// Shared configuration instance
     public static var configuration = Configuration()
     
-    // MARK: - SwiftUI Views
+    // MARK: - SwiftUI Views (App ID)
     
-    /// Create a developer apps view for settings pages
+    /// Create a developer apps view using App Store ID
     /// - Parameter currentAppId: The App Store ID of your current app
     /// - Returns: A SwiftUI view displaying other apps from the same developer
     public static func developerAppsView(
@@ -112,11 +120,7 @@ public struct MoPromoteKit {
         )
     }
     
-    /// Create a compact developer apps view
-    /// - Parameters:
-    ///   - currentAppId: The App Store ID of your current app
-    ///   - maxApps: Maximum number of apps to show (default: 5)
-    /// - Returns: A compact SwiftUI view for smaller spaces
+    /// Create a compact developer apps view using App Store ID
     public static func compactDeveloperAppsView(
         currentAppId: Int,
         maxApps: Int = 5
@@ -124,47 +128,130 @@ public struct MoPromoteKit {
         DeveloperAppsView.compact(currentAppId: currentAppId, maxApps: maxApps)
     }
     
-    /// Create a full-screen developer apps view
-    /// - Parameter currentAppId: The App Store ID of your current app
-    /// - Returns: A SwiftUI view for full-screen presentation
+    /// Create a full-screen developer apps view using App Store ID
     public static func fullScreenDeveloperAppsView(currentAppId: Int) -> some View {
         DeveloperAppsView.fullScreen(currentAppId: currentAppId)
     }
     
-    /// Create a view with manual app selection
-        public static func manualAppsView(appIds: [Int]) -> some View {
-            ManualAppsView(
-                appIds: appIds,
-                maxApps: configuration.maxApps,
-                showTitle: configuration.showTitle,
-                cardStyle: configuration.cardStyle,
-                sortingOrder: configuration.sortingOrder
-            )
-        }
-        
-        /// Create a hybrid view (featured + developer apps)
-        public static func hybridAppsView(
-            featuredAppIds: [Int],
-            currentAppId: Int,
-            maxAdditional: Int = 5
-        ) -> some View {
-            HybridAppsView(
-                featuredAppIds: featuredAppIds,
-                currentAppId: currentAppId,
-                maxAdditional: maxAdditional,
-                showTitle: configuration.showTitle,
-                cardStyle: configuration.cardStyle
-            )
-        }
+    // MARK: - SwiftUI Views (Bundle ID)
     
-    // MARK: - Programmatic API
+    /// Create a developer apps view using Bundle ID
+    /// - Parameter currentBundleId: The bundle identifier of your current app (e.g., "com.example.myapp")
+    /// - Returns: A SwiftUI view displaying other apps from the same developer
+    public static func developerAppsView(
+        currentBundleId: String,
+        excludeBundleIds: [String] = []
+    ) -> some View {
+        DeveloperAppsView(
+            currentBundleId: currentBundleId,
+            excludeBundleIds: excludeBundleIds,
+            maxApps: configuration.maxApps,
+            showTitle: configuration.showTitle,
+            cardStyle: configuration.cardStyle == .regular ? .regular : .compact
+        )
+    }
     
-    /// Get apps from the same developer programmatically
-    /// - Parameter currentAppId: The App Store ID of your current app
-    /// - Returns: Search results with enhanced global ratings
+    /// Create a compact developer apps view using Bundle ID
+    public static func compactDeveloperAppsView(
+        currentBundleId: String,
+        maxApps: Int = 5
+    ) -> some View {
+        DeveloperAppsView.compact(currentBundleId: currentBundleId, maxApps: maxApps)
+    }
+    
+    /// Create a full-screen developer apps view using Bundle ID
+    public static func fullScreenDeveloperAppsView(currentBundleId: String) -> some View {
+        DeveloperAppsView.fullScreen(currentBundleId: currentBundleId)
+    }
+    
+    // MARK: - SwiftUI Views (Auto-Detect)
+    
+    /// Create a developer apps view using auto-detected Bundle ID from Bundle.main
+    /// - Returns: A SwiftUI view displaying other apps from the same developer
+    public static func developerAppsView() -> some View {
+        DeveloperAppsView(
+            currentBundleId: Bundle.main.bundleIdentifier ?? "",
+            maxApps: configuration.maxApps,
+            showTitle: configuration.showTitle,
+            cardStyle: configuration.cardStyle == .regular ? .regular : .compact
+        )
+    }
+    
+    /// Create a view with manual app selection (by App Store IDs)
+    public static func manualAppsView(appIds: [Int]) -> some View {
+        ManualAppsView(
+            appIds: appIds,
+            maxApps: configuration.maxApps,
+            showTitle: configuration.showTitle,
+            cardStyle: configuration.cardStyle,
+            sortingOrder: configuration.sortingOrder
+        )
+    }
+    
+    /// Create a view with manual app selection (by Bundle IDs)
+    public static func manualAppsView(bundleIds: [String]) -> some View {
+        ManualAppsView(
+            bundleIds: bundleIds,
+            maxApps: configuration.maxApps,
+            showTitle: configuration.showTitle,
+            cardStyle: configuration.cardStyle,
+            sortingOrder: configuration.sortingOrder
+        )
+    }
+    
+    /// Create a hybrid view using App Store IDs
+    public static func hybridAppsView(
+        featuredAppIds: [Int],
+        currentAppId: Int,
+        maxAdditional: Int = 5
+    ) -> some View {
+        HybridAppsView(
+            featuredAppIds: featuredAppIds,
+            currentAppId: currentAppId,
+            maxAdditional: maxAdditional,
+            showTitle: configuration.showTitle,
+            cardStyle: configuration.cardStyle
+        )
+    }
+    
+    /// Create a hybrid view using Bundle IDs
+    public static func hybridAppsView(
+        featuredBundleIds: [String],
+        currentBundleId: String,
+        maxAdditional: Int = 5
+    ) -> some View {
+        HybridAppsView(
+            featuredBundleIds: featuredBundleIds,
+            currentBundleId: currentBundleId,
+            maxAdditional: maxAdditional,
+            showTitle: configuration.showTitle,
+            cardStyle: configuration.cardStyle
+        )
+    }
+    
+    // MARK: - Programmatic API (App ID)
+    
+    /// Get apps from the same developer programmatically using App Store ID
     public static func fetchDeveloperApps(currentAppId: Int) async throws -> SearchResults {
         let manager = AppSearchManager(countryCode: configuration.countryCode)
         return try await manager.fetchDeveloperApps(appId: currentAppId)
+    }
+    
+    // MARK: - Programmatic API (Bundle ID)
+    
+    /// Get apps from the same developer programmatically using Bundle ID
+    public static func fetchDeveloperApps(currentBundleId: String) async throws -> SearchResults {
+        let manager = AppSearchManager(countryCode: configuration.countryCode)
+        return try await manager.fetchDeveloperApps(bundleId: currentBundleId)
+    }
+    
+    /// Get apps from the same developer using auto-detected Bundle ID
+    public static func fetchDeveloperApps() async throws -> SearchResults {
+        guard let bundleId = Bundle.main.bundleIdentifier else {
+            throw AppSearchError.noAppFound
+        }
+        let manager = AppSearchManager(countryCode: configuration.countryCode)
+        return try await manager.fetchDeveloperApps(bundleId: bundleId)
     }
     
     /// Get global ratings debug information
@@ -245,13 +332,27 @@ public extension MoPromoteKit.Configuration {
 // MARK: - SwiftUI Convenience Modifiers
 
 public extension View {
-    /// Add a developer apps section to your view
-    /// - Parameter currentAppId: The App Store ID of your current app
-    /// - Returns: Modified view with developer apps section
+    /// Add a developer apps section to your view using App Store ID
     func withDeveloperApps(currentAppId: Int) -> some View {
         VStack(spacing: 16) {
             self
             MoPromoteKit.developerAppsView(currentAppId: currentAppId)
+        }
+    }
+    
+    /// Add a developer apps section to your view using Bundle ID
+    func withDeveloperApps(currentBundleId: String) -> some View {
+        VStack(spacing: 16) {
+            self
+            MoPromoteKit.developerAppsView(currentBundleId: currentBundleId)
+        }
+    }
+    
+    /// Add a developer apps section using auto-detected Bundle ID
+    func withDeveloperApps() -> some View {
+        VStack(spacing: 16) {
+            self
+            MoPromoteKit.developerAppsView()
         }
     }
 }

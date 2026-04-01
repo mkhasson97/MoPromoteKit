@@ -1,0 +1,57 @@
+/* MoPromoteKit - Deutsch */
+
+/* Loading States */
+"loading.developer.apps" = "Entwickler-Apps laden...";
+"loading.apps" = "Apps laden...";
+"loading.selected.apps" = "Ausgewählte Apps laden...";
+"loading.percent.complete" = "%d%% abgeschlossen";
+
+/* Error States */
+"error.failed.to.load.apps" = "Apps konnten nicht geladen werden";
+"error.failed.to.load" = "Fehler beim Laden";
+"error.try.again" = "Erneut versuchen";
+
+/* Empty States */
+"empty.no.other.apps.found" = "Keine weiteren Apps gefunden";
+"empty.no.other.apps.description" = "Dieser Entwickler hat keine weiteren Apps im App Store.";
+"empty.no.additional.apps.from" = "Keine weiteren Apps gefunden von";
+"empty.no.apps.found" = "Keine Apps gefunden";
+"empty.no.apps.available" = "Keine Apps verfügbar";
+"empty.no.apps.available.description" = "Es konnten keine empfohlenen Apps oder weitere Apps dieses Entwicklers geladen werden.";
+
+/* Section Titles */
+"title.more.apps" = "Weitere Apps";
+"title.featured.apps" = "Empfohlene Apps";
+"title.recommended.apps" = "Empfehlungen";
+
+/* Subtitles and Labels */
+"label.from.developer" = "von %@";
+"label.app.count" = "%d App";
+"label.apps.count" = "%d Apps";
+"label.reviews" = "%@ Bewertungen";
+"label.selected.app" = "%d ausgewählte App";
+"label.selected.apps" = "%d ausgewählte Apps";
+"label.handpicked.app" = "%d handverlesene App";
+"label.handpicked.apps" = "%d handverlesene Apps";
+"label.additional.app" = "%d weitere App";
+"label.additional.apps" = "%d weitere Apps";
+"label.more.from" = "Mehr von %@";
+"label.curated.selection" = "Ausgewählte Apps und mehr von %@";
+"label.total.apps" = "%d App";
+"label.total.apps.plural" = "%d Apps";
+"label.no.ratings.yet" = "Noch keine Bewertungen";
+
+/* Analytics Cards */
+"analytics.avg.rating" = "Ø Bewertung";
+"analytics.total.reviews" = "Bewertungen";
+"analytics.categories" = "Kategorien";
+"analytics.combined.rating" = "Gesamtbewertung";
+
+/* Pricing */
+"price.get" = "LADEN";
+
+/* App Info */
+"app.info.unknown.size" = "Unbekannt";
+"app.info.default.genre" = "Apps";
+"app.info.default.language" = "Englisch";
+"app.info.languages.count" = "%d Sprachen";

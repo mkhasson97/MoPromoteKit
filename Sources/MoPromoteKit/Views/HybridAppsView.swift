@@ -16,15 +16,27 @@ public struct HybridAppsView: View {
     @State private var developerName: String = ""
     @State private var loadingProgress: Double = 0.0
     
-    let featuredAppIds: [Int]
-    let currentAppId: Int
+    /// Internal identifier for dual App ID / Bundle ID support
+    enum AppIdentifier {
+        case appId(Int)
+        case bundleId(String)
+    }
+    
+    /// Internal identifier for featured apps
+    enum FeaturedIdentifier {
+        case appIds([Int])
+        case bundleIds([String])
+    }
+    
+    let appIdentifier: AppIdentifier
+    let featuredIdentifier: FeaturedIdentifier
     let maxAdditional: Int
     let showTitle: Bool
     let cardStyle: MoPromoteKit.CardStyle
     let showSectionHeaders: Bool
     let featuredCardStyle: MoPromoteKit.CardStyle
     
-    // MARK: - Initializers
+    // MARK: - Initializers (App ID)
     
     public init(
         featuredAppIds: [Int],
@@ -35,8 +47,28 @@ public struct HybridAppsView: View {
         showSectionHeaders: Bool = true,
         featuredCardStyle: MoPromoteKit.CardStyle = .featured
     ) {
-        self.featuredAppIds = featuredAppIds
-        self.currentAppId = currentAppId
+        self.appIdentifier = .appId(currentAppId)
+        self.featuredIdentifier = .appIds(featuredAppIds)
+        self.maxAdditional = maxAdditional
+        self.showTitle = showTitle
+        self.cardStyle = cardStyle
+        self.showSectionHeaders = showSectionHeaders
+        self.featuredCardStyle = featuredCardStyle
+    }
+    
+    // MARK: - Initializers (Bundle ID)
+    
+    public init(
+        featuredBundleIds: [String],
+        currentBundleId: String,
+        maxAdditional: Int = 5,
+        showTitle: Bool = true,
+        cardStyle: MoPromoteKit.CardStyle = .regular,
+        showSectionHeaders: Bool = true,
+        featuredCardStyle: MoPromoteKit.CardStyle = .featured
+    ) {
+        self.appIdentifier = .bundleId(currentBundleId)
+        self.featuredIdentifier = .bundleIds(featuredBundleIds)
         self.maxAdditional = maxAdditional
         self.showTitle = showTitle
         self.cardStyle = cardStyle
@@ -45,6 +77,10 @@ public struct HybridAppsView: View {
     }
     
     // MARK: - Body
+    
+    #if canImport(UIKit)
+    @State private var selectedApp: AppResult?
+    #endif
     
     public var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -58,6 +94,9 @@ public struct HybridAppsView: View {
                 contentView
             }
         }
+        #if canImport(UIKit)
+        .appStoreSheet(selectedApp: $selectedApp)
+        #endif
         .task {
             await loadHybridApps()
         }
@@ -74,7 +113,7 @@ public struct HybridAppsView: View {
             HStack {
                 ProgressView()
                     .scaleEffect(0.8)
-                Text("Loading apps...")
+                Text(L10n.loadingApps)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -84,7 +123,7 @@ public struct HybridAppsView: View {
                     .progressViewStyle(LinearProgressViewStyle())
                     .frame(maxWidth: 200)
                 
-                Text("\(Int(loadingProgress * 100))% complete")
+                Text(L10n.loadingPercentComplete(Int(loadingProgress * 100)))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -101,7 +140,7 @@ public struct HybridAppsView: View {
                 .foregroundColor(.orange)
                 .imageScale(.large)
             
-            Text("Failed to Load Apps")
+            Text(L10n.errorFailedToLoadApps)
                 .font(.headline)
                 .fontWeight(.medium)
             
@@ -111,7 +150,7 @@ public struct HybridAppsView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
             
-            Button("Try Again") {
+            Button(L10n.errorTryAgain) {
                 Task {
                     await loadHybridApps()
                 }
@@ -131,11 +170,11 @@ public struct HybridAppsView: View {
                 .foregroundColor(.gray)
                 .imageScale(.large)
             
-            Text("No Apps Available")
+            Text(L10n.emptyNoAppsAvailable)
                 .font(.headline)
                 .fontWeight(.medium)
             
-            Text("Unable to load featured apps or find additional apps from this developer.")
+            Text(L10n.emptyNoAppsAvailableDescription)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -156,8 +195,8 @@ public struct HybridAppsView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     if showSectionHeaders {
                         sectionHeader(
-                            title: "Featured Apps",
-                            subtitle: "\(featuredApps.count) handpicked app\(featuredApps.count == 1 ? "" : "s")",
+                            title: L10n.titleFeaturedApps,
+                            subtitle: L10n.handpickedApps(featuredApps.count),
                             icon: "star.fill",
                             color: .yellow
                         )
@@ -177,8 +216,8 @@ public struct HybridAppsView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     if showSectionHeaders {
                         sectionHeader(
-                            title: "More from \(developerName.isEmpty ? "Developer" : developerName)",
-                            subtitle: "\(developerApps.count) additional app\(developerApps.count == 1 ? "" : "s")",
+                            title: L10n.moreFrom(developerName.isEmpty ? "Developer" : developerName),
+                            subtitle: L10n.additionalApps(developerApps.count),
                             icon: "person.crop.rectangle",
                             color: .blue
                         )
@@ -205,12 +244,12 @@ public struct HybridAppsView: View {
     private var mainTitleView: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Recommended Apps")
+                Text(L10n.titleRecommendedApps)
                     .font(.title2)
                     .fontWeight(.bold)
                 
                 if !developerName.isEmpty {
-                    Text("Curated selection and more from \(developerName)")
+                    Text(L10n.curatedSelection(developerName))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -221,7 +260,7 @@ public struct HybridAppsView: View {
             VStack(alignment: .trailing, spacing: 2) {
                 let totalApps = featuredApps.count + developerApps.count
                 if totalApps > 0 {
-                    Text("\(totalApps) app\(totalApps == 1 ? "" : "s")")
+                    Text(L10n.totalApps(totalApps))
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 8)
@@ -266,21 +305,21 @@ public struct HybridAppsView: View {
         
         HStack(spacing: 12) {
             summaryCard(
-                title: "Combined Rating",
+                title: L10n.analyticsCombinedRating,
                 value: String(format: "%.1f", avgRating),
                 icon: "star.fill",
                 color: .yellow
             )
             
             summaryCard(
-                title: "Total Reviews",
+                title: L10n.analyticsTotalReviews,
                 value: totalReviews.formatted(.number.notation(.compactName)),
                 icon: "person.3.fill",
                 color: .blue
             )
             
             summaryCard(
-                title: "Categories",
+                title: L10n.analyticsCategories,
                 value: "\(categories)",
                 icon: "folder.fill",
                 color: .green
@@ -360,32 +399,62 @@ public struct HybridAppsView: View {
             // Step 1: Load featured apps
             await MainActor.run { loadingProgress = 0.1 }
             
-            let featuredResults = try await searchManager.fetchSpecificApps(appIds: featuredAppIds)
-            featuredApps = featuredResults.results
+            switch featuredIdentifier {
+            case .appIds(let featuredAppIds):
+                let featuredResults = try await searchManager.fetchSpecificApps(appIds: featuredAppIds)
+                featuredApps = featuredResults.results
+            case .bundleIds(let featuredBundleIds):
+                let featuredResults = try await searchManager.fetchSpecificApps(bundleIds: featuredBundleIds)
+                featuredApps = featuredResults.results
+            }
             
             await MainActor.run { loadingProgress = 0.4 }
             
-            // Step 2: Get developer info
-            let currentAppResults = try await getCurrentAppInfo()
-            if let currentApp = currentAppResults.results.first {
-                developerName = currentApp.artistName
+            // Step 2: Get developer info and load additional apps
+            switch appIdentifier {
+            case .appId(let currentAppId):
+                // Get developer name
+                let urlString = "https://itunes.apple.com/\(searchManager.countryCode)/lookup?id=\(currentAppId)"
+                if let url = URL(string: urlString) {
+                    let (data, _) = try await URLSession.shared.data(from: url)
+                    let currentAppResults = try JSONDecoder().decode(SearchResults.self, from: data)
+                    if let currentApp = currentAppResults.results.first {
+                        developerName = currentApp.artistName
+                    }
+                }
+                
+                await MainActor.run { loadingProgress = 0.6 }
+                
+                // Load additional developer apps (excluding featured ones and current app)
+                var excludeIds = featuredApps.map { $0.trackId }
+                excludeIds.append(currentAppId)
+                
+                let developerResults = try await searchManager.fetchDeveloperApps(
+                    appId: currentAppId,
+                    excludeAppIds: excludeIds,
+                    includeCurrentApp: false
+                )
+                developerApps = Array(developerResults.results.prefix(maxAdditional))
+                
+            case .bundleId(let currentBundleId):
+                // Get developer name
+                let currentAppResults = try await searchManager.fetchAppDetails(bundleId: currentBundleId)
+                if let currentApp = currentAppResults.results.first {
+                    developerName = currentApp.artistName
+                }
+                
+                await MainActor.run { loadingProgress = 0.6 }
+                
+                // Load additional developer apps
+                let excludeBundleIds = featuredApps.compactMap { $0.bundleId }
+                
+                let developerResults = try await searchManager.fetchDeveloperApps(
+                    bundleId: currentBundleId,
+                    excludeBundleIds: excludeBundleIds,
+                    includeCurrentApp: false
+                )
+                developerApps = Array(developerResults.results.prefix(maxAdditional))
             }
-            
-            await MainActor.run { loadingProgress = 0.6 }
-            
-            // Step 3: Load additional developer apps (excluding featured ones and current app)
-            var excludeIds = featuredAppIds
-            excludeIds.append(currentAppId)
-            
-            let developerResults = try await searchManager.fetchDeveloperApps(
-                appId: currentAppId,
-                excludeAppIds: excludeIds,
-                includeCurrentApp: false
-            )
-            
-            await MainActor.run { loadingProgress = 0.9 }
-            
-            developerApps = Array(developerResults.results.prefix(maxAdditional))
             
             await MainActor.run { loadingProgress = 1.0 }
             
@@ -396,21 +465,9 @@ public struct HybridAppsView: View {
         }
     }
     
-    private func getCurrentAppInfo() async throws -> SearchResults {
-        let urlString = "https://itunes.apple.com/\(searchManager.countryCode)/lookup?id=\(currentAppId)"
-        guard let url = URL(string: urlString) else {
-            throw URLError(.badURL)
-        }
-        
-        let (data, _) = try await URLSession.shared.data(from: url)
-        return try JSONDecoder().decode(SearchResults.self, from: data)
-    }
-    
     private func openAppInAppStore(app: AppResult) {
-        guard let url = app.appStoreURL else { return }
-        
         #if canImport(UIKit)
-        UIApplication.shared.open(url)
+        selectedApp = app
         #endif
     }
 }
@@ -418,7 +475,9 @@ public struct HybridAppsView: View {
 // MARK: - Convenience Initializers
 
 public extension HybridAppsView {
-    /// Create a hybrid view for settings pages
+    // MARK: - Convenience Initializers (App ID)
+    
+    /// Create a hybrid view for settings pages using App Store IDs
     static func forSettings(
         featuredAppIds: [Int],
         currentAppId: Int,
@@ -435,7 +494,7 @@ public extension HybridAppsView {
         )
     }
     
-    /// Create a compact hybrid view
+    /// Create a compact hybrid view using App Store IDs
     static func compact(
         featuredAppIds: [Int],
         currentAppId: Int,
@@ -452,7 +511,7 @@ public extension HybridAppsView {
         )
     }
     
-    /// Create a full-screen hybrid view
+    /// Create a full-screen hybrid view using App Store IDs
     static func fullScreen(
         featuredAppIds: [Int],
         currentAppId: Int,
@@ -469,7 +528,7 @@ public extension HybridAppsView {
         )
     }
     
-    /// Create a featured-only view (no additional developer apps)
+    /// Create a featured-only view using App Store IDs
     static func featuredOnly(
         featuredAppIds: [Int],
         currentAppId: Int
@@ -477,6 +536,75 @@ public extension HybridAppsView {
         HybridAppsView(
             featuredAppIds: featuredAppIds,
             currentAppId: currentAppId,
+            maxAdditional: 0,
+            showTitle: true,
+            cardStyle: .regular,
+            showSectionHeaders: false,
+            featuredCardStyle: .featured
+        )
+    }
+    
+    // MARK: - Convenience Initializers (Bundle ID)
+    
+    /// Create a hybrid view for settings pages using Bundle IDs
+    static func forSettings(
+        featuredBundleIds: [String],
+        currentBundleId: String,
+        maxAdditional: Int = 3
+    ) -> HybridAppsView {
+        HybridAppsView(
+            featuredBundleIds: featuredBundleIds,
+            currentBundleId: currentBundleId,
+            maxAdditional: maxAdditional,
+            showTitle: true,
+            cardStyle: .compact,
+            showSectionHeaders: true,
+            featuredCardStyle: .featured
+        )
+    }
+    
+    /// Create a compact hybrid view using Bundle IDs
+    static func compact(
+        featuredBundleIds: [String],
+        currentBundleId: String,
+        maxAdditional: Int = 2
+    ) -> HybridAppsView {
+        HybridAppsView(
+            featuredBundleIds: featuredBundleIds,
+            currentBundleId: currentBundleId,
+            maxAdditional: maxAdditional,
+            showTitle: false,
+            cardStyle: .compact,
+            showSectionHeaders: false,
+            featuredCardStyle: .compact
+        )
+    }
+    
+    /// Create a full-screen hybrid view using Bundle IDs
+    static func fullScreen(
+        featuredBundleIds: [String],
+        currentBundleId: String,
+        maxAdditional: Int = 8
+    ) -> HybridAppsView {
+        HybridAppsView(
+            featuredBundleIds: featuredBundleIds,
+            currentBundleId: currentBundleId,
+            maxAdditional: maxAdditional,
+            showTitle: true,
+            cardStyle: .regular,
+            showSectionHeaders: true,
+            featuredCardStyle: .featured
+        )
+    }
+    
+    /// Create a featured-only view using Bundle IDs
+    static func featuredOnly(
+        featuredBundleIds: [String],
+        currentBundleId: String
+    ) -> HybridAppsView {
+        HybridAppsView(
+            featuredBundleIds: featuredBundleIds,
+            currentBundleId: currentBundleId,
             maxAdditional: 0,
             showTitle: true,
             cardStyle: .regular,

@@ -300,4 +300,10 @@ public extension SearchResults {
         let filteredResults = results.filter { $0.trackId != appId }
         return SearchResults(resultCount: filteredResults.count, results: filteredResults)
     }
+    
+    /// Exclude specific app by Bundle ID
+    func excludingApp(withBundleId bundleId: String) -> SearchResults {
+        let filteredResults = results.filter { $0.bundleId != bundleId }
+        return SearchResults(resultCount: filteredResults.count, results: filteredResults)
+    }
 }

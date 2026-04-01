@@ -1,0 +1,57 @@
+/* MoPromoteKit - Türkçe */
+
+/* Loading States */
+"loading.developer.apps" = "Geliştirici uygulamaları yükleniyor...";
+"loading.apps" = "Uygulamalar yükleniyor...";
+"loading.selected.apps" = "Seçilen uygulamalar yükleniyor...";
+"loading.percent.complete" = "%%%d tamamlandı";
+
+/* Error States */
+"error.failed.to.load.apps" = "Uygulamalar yüklenemedi";
+"error.failed.to.load" = "Yükleme başarısız";
+"error.try.again" = "Tekrar Dene";
+
+/* Empty States */
+"empty.no.other.apps.found" = "Başka uygulama bulunamadı";
+"empty.no.other.apps.description" = "Bu geliştiricinin App Store'da başka uygulaması yok.";
+"empty.no.additional.apps.from" = "Ek uygulama bulunamadı:";
+"empty.no.apps.found" = "Uygulama bulunamadı";
+"empty.no.apps.available" = "Uygulama mevcut değil";
+"empty.no.apps.available.description" = "Öne çıkan uygulamalar yüklenemedi veya bu geliştiriciden ek uygulama bulunamadı.";
+
+/* Section Titles */
+"title.more.apps" = "Diğer Uygulamalar";
+"title.featured.apps" = "Öne Çıkan Uygulamalar";
+"title.recommended.apps" = "Önerilen Uygulamalar";
+
+/* Subtitles and Labels */
+"label.from.developer" = "%@ tarafından";
+"label.app.count" = "%d Uygulama";
+"label.apps.count" = "%d Uygulama";
+"label.reviews" = "%@ Değerlendirme";
+"label.selected.app" = "%d seçili uygulama";
+"label.selected.apps" = "%d seçili uygulama";
+"label.handpicked.app" = "%d özenle seçilmiş uygulama";
+"label.handpicked.apps" = "%d özenle seçilmiş uygulama";
+"label.additional.app" = "%d ek uygulama";
+"label.additional.apps" = "%d ek uygulama";
+"label.more.from" = "%@ - Diğer";
+"label.curated.selection" = "Seçki ve %@ tarafından daha fazlası";
+"label.total.apps" = "%d uygulama";
+"label.total.apps.plural" = "%d uygulama";
+"label.no.ratings.yet" = "Henüz değerlendirme yok";
+
+/* Analytics Cards */
+"analytics.avg.rating" = "Ort. Puan";
+"analytics.total.reviews" = "Toplam Değerlendirme";
+"analytics.categories" = "Kategoriler";
+"analytics.combined.rating" = "Birleşik Puan";
+
+/* Pricing */
+"price.get" = "İNDİR";
+
+/* App Info */
+"app.info.unknown.size" = "Bilinmiyor";
+"app.info.default.genre" = "Uygulamalar";
+"app.info.default.language" = "İngilizce";
+"app.info.languages.count" = "%d dil";

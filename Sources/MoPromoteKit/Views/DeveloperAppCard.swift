@@ -69,7 +69,7 @@ public struct DeveloperAppCard: View {
                             .foregroundColor(.secondary)
                     }
                 } else {
-                    Text("No ratings yet")
+                    Text(L10n.noRatingsYet)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

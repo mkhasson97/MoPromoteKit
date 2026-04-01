@@ -14,8 +14,15 @@ public struct HorizontalAppsView: View {
     @State private var errorMessage: String?
     @State private var developerName: String = ""
     
-    let currentAppId: Int
+    /// Internal identifier for dual App ID / Bundle ID support
+    enum AppIdentifier {
+        case appId(Int)
+        case bundleId(String)
+    }
+    
+    let appIdentifier: AppIdentifier
     let excludeAppIds: [Int]
+    let excludeBundleIds: [String]
     let maxApps: Int
     let showDeveloperName: Bool
     let iconSizeOption: IconSize
@@ -26,6 +33,8 @@ public struct HorizontalAppsView: View {
         iconSizeOption.value
     }
     
+    // MARK: - Initializers (App ID)
+    
     public init(
         currentAppId: Int,
         excludeAppIds: [Int] = [],
@@ -34,12 +43,31 @@ public struct HorizontalAppsView: View {
         iconSize: IconSize = .medium,
         spacing: CGFloat? = nil
     ) {
-        self.currentAppId = currentAppId
+        self.appIdentifier = .appId(currentAppId)
         self.excludeAppIds = excludeAppIds
+        self.excludeBundleIds = []
         self.maxApps = maxApps
         self.showDeveloperName = showDeveloperName
         self.iconSizeOption = iconSize
-        // Auto-calculate spacing based on icon size if not provided
+        self.spacing = spacing ?? iconSize.defaultSpacing
+    }
+    
+    // MARK: - Initializers (Bundle ID)
+    
+    public init(
+        currentBundleId: String,
+        excludeBundleIds: [String] = [],
+        maxApps: Int = 6,
+        showDeveloperName: Bool = true,
+        iconSize: IconSize = .medium,
+        spacing: CGFloat? = nil
+    ) {
+        self.appIdentifier = .bundleId(currentBundleId)
+        self.excludeAppIds = []
+        self.excludeBundleIds = excludeBundleIds
+        self.maxApps = maxApps
+        self.showDeveloperName = showDeveloperName
+        self.iconSizeOption = iconSize
         self.spacing = spacing ?? iconSize.defaultSpacing
     }
     
@@ -78,8 +106,12 @@ public struct HorizontalAppsView: View {
         }
     }
     
+    #if canImport(UIKit)
+    @State private var selectedApp: AppResult?
+    #endif
+    
     public var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             if isLoading {
                 loadingView
             } else if let errorMessage = errorMessage {
@@ -90,12 +122,12 @@ public struct HorizontalAppsView: View {
                 contentView
             }
         }
+        #if canImport(UIKit)
+        .appStoreSheet(selectedApp: $selectedApp)
+        #endif
         .task {
             await loadApps()
         }
-//        .refreshable {
-//            await loadApps()
-//        }
     }
     
     // MARK: - Subviews
@@ -105,7 +137,7 @@ public struct HorizontalAppsView: View {
         VStack(spacing: 8) {
             ProgressView()
                 .scaleEffect(0.8)
-            Text("Loading apps...")
+            Text(L10n.loadingApps)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -120,7 +152,7 @@ public struct HorizontalAppsView: View {
                 .font(.title3)
                 .foregroundColor(.orange)
             
-            Text("Failed to Load")
+            Text(L10n.errorFailedToLoad)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -135,7 +167,7 @@ public struct HorizontalAppsView: View {
                 .font(.title3)
                 .foregroundColor(.gray)
             
-            Text("No Apps Found")
+            Text(L10n.emptyNoAppsFound)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -238,18 +270,41 @@ public struct HorizontalAppsView: View {
         searchManager.clearCache()
         
         do {
-            // Get current app info to retrieve developer name
-            let currentAppResults = try await getCurrentAppInfo()
-            if let currentApp = currentAppResults.results.first {
-                developerName = currentApp.artistName
-            }
+            let results: SearchResults
             
-            // Fetch developer apps
-            let results = try await searchManager.fetchDeveloperApps(
-                appId: currentAppId,
-                excludeAppIds: excludeAppIds,
-                includeCurrentApp: false
-            )
+            switch appIdentifier {
+            case .appId(let currentAppId):
+                // Get current app info to retrieve developer name
+                let urlString = "https://itunes.apple.com/\(searchManager.countryCode)/lookup?id=\(currentAppId)"
+                if let url = URL(string: urlString) {
+                    let (data, _) = try await URLSession.shared.data(from: url)
+                    let currentAppResults = try JSONDecoder().decode(SearchResults.self, from: data)
+                    if let currentApp = currentAppResults.results.first {
+                        developerName = currentApp.artistName
+                    }
+                }
+                
+                // Fetch developer apps
+                results = try await searchManager.fetchDeveloperApps(
+                    appId: currentAppId,
+                    excludeAppIds: excludeAppIds,
+                    includeCurrentApp: false
+                )
+                
+            case .bundleId(let currentBundleId):
+                // Get current app info to retrieve developer name
+                let currentAppResults = try await searchManager.fetchAppDetails(bundleId: currentBundleId)
+                if let currentApp = currentAppResults.results.first {
+                    developerName = currentApp.artistName
+                }
+                
+                // Fetch developer apps
+                results = try await searchManager.fetchDeveloperApps(
+                    bundleId: currentBundleId,
+                    excludeBundleIds: excludeBundleIds,
+                    includeCurrentApp: false
+                )
+            }
             
             apps = Array(results.results.prefix(maxApps))
             isLoading = false
@@ -259,22 +314,10 @@ public struct HorizontalAppsView: View {
         }
     }
     
-    private func getCurrentAppInfo() async throws -> SearchResults {
-        let urlString = "https://itunes.apple.com/\(searchManager.countryCode)/lookup?id=\(currentAppId)"
-        guard let url = URL(string: urlString) else {
-            throw URLError(.badURL)
-        }
-        
-        let (data, _) = try await URLSession.shared.data(from: url)
-        return try JSONDecoder().decode(SearchResults.self, from: data)
-    }
-    
     private func openAppInAppStore(app: AppResult) {
-        guard let url = app.appStoreURL else { return }
-        
-#if canImport(UIKit)
-        UIApplication.shared.open(url)
-#endif
+        #if canImport(UIKit)
+        selectedApp = app
+        #endif
     }
 }
 
@@ -316,6 +359,8 @@ private struct AppIconButton: View {
 // MARK: - Convenience Initializers
 
 public extension HorizontalAppsView {
+    // MARK: - Convenience Initializers (App ID)
+    
     /// Create a horizontal view for settings or home pages (medium size)
     static func forSettings(
         currentAppId: Int,
@@ -389,6 +434,88 @@ public extension HorizontalAppsView {
         HorizontalAppsView(
             currentAppId: currentAppId,
             excludeAppIds: excludeAppIds,
+            maxApps: maxApps,
+            showDeveloperName: showDeveloperName,
+            iconSize: .custom(iconSize),
+            spacing: spacing
+        )
+    }
+    
+    // MARK: - Convenience Initializers (Bundle ID)
+    
+    /// Create a horizontal view for settings using Bundle ID
+    static func forSettings(
+        currentBundleId: String,
+        excludeBundleIds: [String] = [],
+        maxApps: Int = 6
+    ) -> HorizontalAppsView {
+        HorizontalAppsView(
+            currentBundleId: currentBundleId,
+            excludeBundleIds: excludeBundleIds,
+            maxApps: maxApps,
+            showDeveloperName: true,
+            iconSize: .medium
+        )
+    }
+    
+    /// Create a compact horizontal view using Bundle ID
+    static func compact(
+        currentBundleId: String,
+        excludeBundleIds: [String] = [],
+        maxApps: Int = 8
+    ) -> HorizontalAppsView {
+        HorizontalAppsView(
+            currentBundleId: currentBundleId,
+            excludeBundleIds: excludeBundleIds,
+            maxApps: maxApps,
+            showDeveloperName: true,
+            iconSize: .small
+        )
+    }
+    
+    /// Create a large horizontal view using Bundle ID
+    static func large(
+        currentBundleId: String,
+        excludeBundleIds: [String] = [],
+        maxApps: Int = 5
+    ) -> HorizontalAppsView {
+        HorizontalAppsView(
+            currentBundleId: currentBundleId,
+            excludeBundleIds: excludeBundleIds,
+            maxApps: maxApps,
+            showDeveloperName: true,
+            iconSize: .large
+        )
+    }
+    
+    /// Create a horizontal view without developer name using Bundle ID
+    static func iconsOnly(
+        currentBundleId: String,
+        excludeBundleIds: [String] = [],
+        maxApps: Int = 6,
+        iconSize: IconSize = .medium
+    ) -> HorizontalAppsView {
+        HorizontalAppsView(
+            currentBundleId: currentBundleId,
+            excludeBundleIds: excludeBundleIds,
+            maxApps: maxApps,
+            showDeveloperName: false,
+            iconSize: iconSize
+        )
+    }
+    
+    /// Create a horizontal view with custom icon size using Bundle ID
+    static func custom(
+        currentBundleId: String,
+        excludeBundleIds: [String] = [],
+        maxApps: Int = 6,
+        iconSize: CGFloat,
+        spacing: CGFloat? = nil,
+        showDeveloperName: Bool = true
+    ) -> HorizontalAppsView {
+        HorizontalAppsView(
+            currentBundleId: currentBundleId,
+            excludeBundleIds: excludeBundleIds,
             maxApps: maxApps,
             showDeveloperName: showDeveloperName,
             iconSize: .custom(iconSize),

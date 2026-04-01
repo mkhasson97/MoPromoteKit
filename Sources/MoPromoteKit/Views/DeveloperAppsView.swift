@@ -17,8 +17,15 @@ public struct DeveloperAppsView: View {
     @State private var totalGlobalRatings: Int = 0
     @State private var loadingProgress: Double = 0.0
     
-    let currentAppId: Int
+    /// Internal identifier for dual App ID / Bundle ID support
+    enum AppIdentifier {
+        case appId(Int)
+        case bundleId(String)
+    }
+    
+    let appIdentifier: AppIdentifier
     let excludeAppIds: [Int]
+    let excludeBundleIds: [String]
     let maxApps: Int
     let showTitle: Bool
     let cardStyle: CardStyle
@@ -40,7 +47,7 @@ public struct DeveloperAppsView: View {
         case random
     }
     
-    // MARK: - Initializers
+    // MARK: - Initializers (App ID)
     
     public init(
         currentAppId: Int,
@@ -53,8 +60,34 @@ public struct DeveloperAppsView: View {
         showAnalytics: Bool = false,
         developerProfile: DeveloperProfile = .none
     ) {
-        self.currentAppId = currentAppId
+        self.appIdentifier = .appId(currentAppId)
         self.excludeAppIds = excludeAppIds
+        self.excludeBundleIds = []
+        self.maxApps = maxApps
+        self.showTitle = showTitle
+        self.cardStyle = cardStyle
+        self.includeCurrentApp = includeCurrentApp
+        self.sortingOrder = sortingOrder
+        self.showAnalytics = showAnalytics
+        self.developerProfile = developerProfile
+    }
+    
+    // MARK: - Initializers (Bundle ID)
+    
+    public init(
+        currentBundleId: String,
+        excludeBundleIds: [String] = [],
+        maxApps: Int = 10,
+        showTitle: Bool = true,
+        cardStyle: CardStyle = .regular,
+        includeCurrentApp: Bool = false,
+        sortingOrder: SortingOrder = .alphabetical,
+        showAnalytics: Bool = false,
+        developerProfile: DeveloperProfile = .none
+    ) {
+        self.appIdentifier = .bundleId(currentBundleId)
+        self.excludeAppIds = []
+        self.excludeBundleIds = excludeBundleIds
         self.maxApps = maxApps
         self.showTitle = showTitle
         self.cardStyle = cardStyle
@@ -65,6 +98,10 @@ public struct DeveloperAppsView: View {
     }
     
     // MARK: - Body
+    
+    #if canImport(UIKit)
+    @State private var selectedApp: AppResult?
+    #endif
     
     public var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -78,6 +115,9 @@ public struct DeveloperAppsView: View {
                 contentView
             }
         }
+        #if canImport(UIKit)
+        .appStoreSheet(selectedApp: $selectedApp)
+        #endif
         .task {
             await loadDeveloperApps()
         }
@@ -94,7 +134,7 @@ public struct DeveloperAppsView: View {
             HStack {
                 ProgressView()
                     .scaleEffect(0.8)
-                Text("Loading developer apps...")
+                Text(L10n.loadingDeveloperApps)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -104,7 +144,7 @@ public struct DeveloperAppsView: View {
                     .progressViewStyle(LinearProgressViewStyle())
                     .frame(maxWidth: 200)
                 
-                Text("\(Int(loadingProgress * 100))% complete")
+                Text(L10n.loadingPercentComplete(Int(loadingProgress * 100)))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -121,7 +161,7 @@ public struct DeveloperAppsView: View {
                 .foregroundColor(.orange)
                 .imageScale(.large)
             
-            Text("Failed to Load Apps")
+            Text(L10n.errorFailedToLoadApps)
                 .font(.headline)
                 .fontWeight(.medium)
             
@@ -131,7 +171,7 @@ public struct DeveloperAppsView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
             
-            Button("Try Again") {
+            Button(L10n.errorTryAgain) {
                 Task {
                     await loadDeveloperApps()
                 }
@@ -152,21 +192,21 @@ public struct DeveloperAppsView: View {
                 .imageScale(.large)
             
             if developerName.isEmpty {
-                Text("No Other Apps Found")
+                Text(L10n.emptyNoOtherAppsFound)
                     .font(.headline)
                     .fontWeight(.medium)
                 
-                Text("This developer doesn't have any other apps available in the App Store.")
+                Text(L10n.emptyNoOtherAppsDescription)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             } else {
-                Text("No Other Apps Found")
+                Text(L10n.emptyNoOtherAppsFound)
                     .font(.headline)
                     .fontWeight(.medium)
                 
                 VStack(spacing: 4) {
-                    Text("No additional apps found from")
+                    Text(L10n.emptyNoAdditionalAppsFrom)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -212,12 +252,12 @@ public struct DeveloperAppsView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("More Apps")
+                    Text(L10n.titleMoreApps)
                         .font(.title2)
                         .fontWeight(.bold)
                     
                     if !developerName.isEmpty {
-                        Text("from \(developerName)")
+                        Text(L10n.fromDeveloper(developerName))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -228,7 +268,7 @@ public struct DeveloperAppsView: View {
             
             VStack(alignment: .trailing, spacing: 2) {
                 if developerApps.count > 0 {
-                    Text("\(developerApps.count) App\(developerApps.count == 1 ? "" : "s")")
+                    Text(L10n.appCount(developerApps.count))
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 8)
@@ -238,7 +278,7 @@ public struct DeveloperAppsView: View {
                 }
                 
                 if totalGlobalRatings > 0 {
-                    Text("\(totalGlobalRatings.formatted(.number.notation(.compactName))) Reviews")
+                    Text(L10n.reviews(totalGlobalRatings.formatted(.number.notation(.compactName))))
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -252,21 +292,21 @@ public struct DeveloperAppsView: View {
     private var analyticsView: some View {
         HStack(spacing: 16) {
             analyticsCard(
-                title: "Avg Rating",
+                title: L10n.analyticsAvgRating,
                 value: String(format: "%.1f", averageRating),
                 icon: "star.fill",
                 color: .yellow
             )
             
             analyticsCard(
-                title: "Total Reviews",
+                title: L10n.analyticsTotalReviews,
                 value: totalGlobalRatings.formatted(.number.notation(.compactName)),
                 icon: "person.3.fill",
                 color: .blue
             )
             
             analyticsCard(
-                title: "Categories",
+                title: L10n.analyticsCategories,
                 value: "\(uniqueCategories.count)",
                 icon: "folder.fill",
                 color: .green
@@ -361,21 +401,38 @@ public struct DeveloperAppsView: View {
                 loadingProgress = 0.2
             }
             
-            let results = try await searchManager.fetchDeveloperApps(
-                appId: currentAppId,
-                excludeAppIds: excludeAppIds,
-                includeCurrentApp: includeCurrentApp
-            )
+            let results: SearchResults
             
-            // Update progress
-            await MainActor.run {
-                loadingProgress = 0.6
-            }
-            
-            // Get developer name from current app lookup
-            let currentAppResults = try await getCurrentAppInfo()
-            if let currentApp = currentAppResults.results.first {
-                developerName = currentApp.artistName
+            switch appIdentifier {
+            case .appId(let currentAppId):
+                results = try await searchManager.fetchDeveloperApps(
+                    appId: currentAppId,
+                    excludeAppIds: excludeAppIds,
+                    includeCurrentApp: includeCurrentApp
+                )
+                
+                // Get developer name from current app lookup
+                let urlString = "https://itunes.apple.com/\(searchManager.countryCode)/lookup?id=\(currentAppId)"
+                if let url = URL(string: urlString) {
+                    let (data, _) = try await URLSession.shared.data(from: url)
+                    let currentAppResults = try JSONDecoder().decode(SearchResults.self, from: data)
+                    if let currentApp = currentAppResults.results.first {
+                        developerName = currentApp.artistName
+                    }
+                }
+                
+            case .bundleId(let currentBundleId):
+                results = try await searchManager.fetchDeveloperApps(
+                    bundleId: currentBundleId,
+                    excludeBundleIds: excludeBundleIds,
+                    includeCurrentApp: includeCurrentApp
+                )
+                
+                // Get developer name from bundle ID lookup
+                let currentAppResults = try await searchManager.fetchAppDetails(bundleId: currentBundleId)
+                if let currentApp = currentAppResults.results.first {
+                    developerName = currentApp.artistName
+                }
             }
             
             // Update progress
@@ -402,29 +459,19 @@ public struct DeveloperAppsView: View {
         }
     }
     
-    private func getCurrentAppInfo() async throws -> SearchResults {
-        let urlString = "https://itunes.apple.com/\(searchManager.countryCode)/lookup?id=\(currentAppId)"
-        guard let url = URL(string: urlString) else {
-            throw URLError(.badURL)
-        }
-        
-        let (data, _) = try await URLSession.shared.data(from: url)
-        return try JSONDecoder().decode(SearchResults.self, from: data)
-    }
-    
     private func openAppInAppStore(app: AppResult) {
-        guard let url = app.appStoreURL else { return }
-        
-#if canImport(UIKit)
-        UIApplication.shared.open(url)
-#endif
+        #if canImport(UIKit)
+        selectedApp = app
+        #endif
     }
 }
 
 // MARK: - Convenience Initializers
 
 public extension DeveloperAppsView {
-    /// Create a view for settings page
+    // MARK: - Convenience Initializers (App ID)
+    
+    /// Create a view for settings page using App Store ID
     static func forSettings(
         currentAppId: Int,
         excludeAppIds: [Int] = [],
@@ -441,7 +488,7 @@ public extension DeveloperAppsView {
         )
     }
     
-    /// Create a compact view for smaller spaces
+    /// Create a compact view using App Store ID
     static func compact(
         currentAppId: Int,
         excludeAppIds: [Int] = [],
@@ -458,7 +505,7 @@ public extension DeveloperAppsView {
         )
     }
     
-    /// Create a view for full screen presentation
+    /// Create a full screen view using App Store ID
     static func fullScreen(
         currentAppId: Int,
         excludeAppIds: [Int] = [],
@@ -477,7 +524,7 @@ public extension DeveloperAppsView {
         )
     }
     
-    /// Create a featured apps view (larger cards, sorted by rating)
+    /// Create a featured apps view using App Store ID
     static func featured(
         currentAppId: Int,
         excludeAppIds: [Int] = [],
@@ -496,7 +543,7 @@ public extension DeveloperAppsView {
         )
     }
     
-    /// Create a random discovery view
+    /// Create a random discovery view using App Store ID
     static func discovery(
         currentAppId: Int,
         excludeAppIds: [Int] = [],
@@ -512,10 +559,100 @@ public extension DeveloperAppsView {
             showAnalytics: false
         )
     }
+    
+    // MARK: - Convenience Initializers (Bundle ID)
+    
+    /// Create a view for settings page using Bundle ID
+    static func forSettings(
+        currentBundleId: String,
+        excludeBundleIds: [String] = [],
+        developerProfile: DeveloperProfile = .none
+    ) -> DeveloperAppsView {
+        DeveloperAppsView(
+            currentBundleId: currentBundleId,
+            excludeBundleIds: excludeBundleIds,
+            maxApps: 6,
+            showTitle: true,
+            cardStyle: .regular,
+            showAnalytics: true,
+            developerProfile: developerProfile
+        )
+    }
+    
+    /// Create a compact view using Bundle ID
+    static func compact(
+        currentBundleId: String,
+        excludeBundleIds: [String] = [],
+        maxApps: Int = 5,
+        developerProfile: DeveloperProfile = .none
+    ) -> DeveloperAppsView {
+        DeveloperAppsView(
+            currentBundleId: currentBundleId,
+            excludeBundleIds: excludeBundleIds,
+            maxApps: maxApps,
+            showTitle: false,
+            cardStyle: .compact,
+            developerProfile: developerProfile
+        )
+    }
+    
+    /// Create a full screen view using Bundle ID
+    static func fullScreen(
+        currentBundleId: String,
+        excludeBundleIds: [String] = [],
+        sortingOrder: SortingOrder = .rating,
+        developerProfile: DeveloperProfile = .none
+    ) -> DeveloperAppsView {
+        DeveloperAppsView(
+            currentBundleId: currentBundleId,
+            excludeBundleIds: excludeBundleIds,
+            maxApps: 20,
+            showTitle: true,
+            cardStyle: .regular,
+            sortingOrder: sortingOrder,
+            showAnalytics: true,
+            developerProfile: developerProfile
+        )
+    }
+    
+    /// Create a featured apps view using Bundle ID
+    static func featured(
+        currentBundleId: String,
+        excludeBundleIds: [String] = [],
+        maxApps: Int = 4,
+        developerProfile: DeveloperProfile = .none
+    ) -> DeveloperAppsView {
+        DeveloperAppsView(
+            currentBundleId: currentBundleId,
+            excludeBundleIds: excludeBundleIds,
+            maxApps: maxApps,
+            showTitle: true,
+            cardStyle: .featured,
+            sortingOrder: .rating,
+            showAnalytics: false,
+            developerProfile: developerProfile
+        )
+    }
+    
+    /// Create a random discovery view using Bundle ID
+    static func discovery(
+        currentBundleId: String,
+        excludeBundleIds: [String] = [],
+        maxApps: Int = 3
+    ) -> DeveloperAppsView {
+        DeveloperAppsView(
+            currentBundleId: currentBundleId,
+            excludeBundleIds: excludeBundleIds,
+            maxApps: maxApps,
+            showTitle: true,
+            cardStyle: .compact,
+            sortingOrder: .random,
+            showAnalytics: false
+        )
+    }
 }
 
 // MARK: - Featured App Card
-
 public struct FeaturedAppCard: View {
     let app: AppResult
     let onDownloadTapped: () -> Void

@@ -1,0 +1,57 @@
+/* MoPromoteKit - English (Base) */
+
+/* Loading States */
+"loading.developer.apps" = "Loading developer apps...";
+"loading.apps" = "Loading apps...";
+"loading.selected.apps" = "Loading selected apps...";
+"loading.percent.complete" = "%d%% complete";
+
+/* Error States */
+"error.failed.to.load.apps" = "Failed to Load Apps";
+"error.failed.to.load" = "Failed to Load";
+"error.try.again" = "Try Again";
+
+/* Empty States */
+"empty.no.other.apps.found" = "No Other Apps Found";
+"empty.no.other.apps.description" = "This developer doesn't have any other apps available in the App Store.";
+"empty.no.additional.apps.from" = "No additional apps found from";
+"empty.no.apps.found" = "No apps found";
+"empty.no.apps.available" = "No Apps Available";
+"empty.no.apps.available.description" = "Unable to load featured apps or find additional apps from this developer.";
+
+/* Section Titles */
+"title.more.apps" = "More Apps";
+"title.featured.apps" = "Featured Apps";
+"title.recommended.apps" = "Recommended Apps";
+
+/* Subtitles and Labels */
+"label.from.developer" = "from %@";
+"label.app.count" = "%d App";
+"label.apps.count" = "%d Apps";
+"label.reviews" = "%@ Reviews";
+"label.selected.app" = "%d selected app";
+"label.selected.apps" = "%d selected apps";
+"label.handpicked.app" = "%d handpicked app";
+"label.handpicked.apps" = "%d handpicked apps";
+"label.additional.app" = "%d additional app";
+"label.additional.apps" = "%d additional apps";
+"label.more.from" = "More from %@";
+"label.curated.selection" = "Curated selection and more from %@";
+"label.total.apps" = "%d app";
+"label.total.apps.plural" = "%d apps";
+"label.no.ratings.yet" = "No ratings yet";
+
+/* Analytics Cards */
+"analytics.avg.rating" = "Avg Rating";
+"analytics.total.reviews" = "Total Reviews";
+"analytics.categories" = "Categories";
+"analytics.combined.rating" = "Combined Rating";
+
+/* Pricing */
+"price.get" = "GET";
+
+/* App Info */
+"app.info.unknown.size" = "Unknown";
+"app.info.default.genre" = "Apps";
+"app.info.default.language" = "English";
+"app.info.languages.count" = "%d languages";

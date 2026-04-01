@@ -22,9 +22,9 @@ public class AppSearchManager: ObservableObject {
         self.primaryCountryCode = countryCode ?? CountrySettings.shared.selectedCountry
     }
     
-    // MARK: - Main API
+    // MARK: - Main API (App ID)
     
-    /// Fetch all apps from the same developer
+    /// Fetch all apps from the same developer using App Store ID
     public func fetchDeveloperApps(
         appId: Int,
         excludeAppIds: [Int] = [],
@@ -48,9 +48,70 @@ public class AppSearchManager: ObservableObject {
             excludeIds.append(appId)
         }
         
-        let developerApps = try await searchByArtistId(
+        return try await fetchAndEnhanceDeveloperApps(
             artistId: app.artistId ?? 0,
-            excludingAppIds: excludeIds
+            excludingAppIds: excludeIds,
+            maxApps: maxApps,
+            cacheKey: cacheKey
+        )
+    }
+    
+    // MARK: - Main API (Bundle ID)
+    
+    /// Fetch all apps from the same developer using Bundle ID
+    /// - Parameter bundleId: The bundle identifier (e.g., "com.example.myapp")
+    public func fetchDeveloperApps(
+        bundleId: String,
+        excludeBundleIds: [String] = [],
+        includeCurrentApp: Bool = false,
+        maxApps: Int? = nil
+    ) async throws -> SearchResults {
+        let cacheKey = "developer_bundle_\(bundleId)_exclude_\(excludeBundleIds.sorted().joined(separator: "_"))"
+        if let cached = getCachedResult(key: cacheKey) {
+            return cached
+        }
+        
+        // Look up the app by bundle ID to find the developer
+        let appDetails = try await fetchAppDetails(bundleId: bundleId)
+        guard let app = appDetails.results.first else {
+            throw AppSearchError.noAppFound
+        }
+        
+        // Build exclusion list by app IDs
+        var excludeIds: [Int] = []
+        if !includeCurrentApp {
+            excludeIds.append(app.trackId)
+        }
+        
+        // Resolve excluded bundle IDs to track IDs
+        if !excludeBundleIds.isEmpty {
+            for excludeBundleId in excludeBundleIds {
+                if let resolved = try? await fetchAppDetails(bundleId: excludeBundleId).results.first {
+                    excludeIds.append(resolved.trackId)
+                }
+            }
+        }
+        
+        return try await fetchAndEnhanceDeveloperApps(
+            artistId: app.artistId ?? 0,
+            excludingAppIds: excludeIds,
+            maxApps: maxApps,
+            cacheKey: cacheKey
+        )
+    }
+    
+    // MARK: - Shared Developer Apps Fetching
+    
+    /// Shared logic for fetching and enhancing developer apps
+    private func fetchAndEnhanceDeveloperApps(
+        artistId: Int,
+        excludingAppIds: [Int],
+        maxApps: Int?,
+        cacheKey: String
+    ) async throws -> SearchResults {
+        let developerApps = try await searchByArtistId(
+            artistId: artistId,
+            excludingAppIds: excludingAppIds
         )
         
         // Enhance each app with global ratings
@@ -235,7 +296,7 @@ public class AppSearchManager: ObservableObject {
     
     // MARK: - Additional API Methods
     
-    /// Fetch specific apps by their IDs
+    /// Fetch specific apps by their App Store IDs
     public func fetchSpecificApps(appIds: [Int]) async throws -> SearchResults {
         let cacheKey = "manual_\(appIds.sorted().map(String.init).joined(separator: "_"))"
         if let cached = getCachedResult(key: cacheKey) {
@@ -266,6 +327,46 @@ public class AppSearchManager: ObservableObject {
             
             return appIds.compactMap { targetId in
                 results.first { $0.trackId == targetId }
+            }
+        }
+        
+        let searchResults = SearchResults(resultCount: enhancedApps.count, results: enhancedApps)
+        setCachedResult(key: cacheKey, data: searchResults)
+        return searchResults
+    }
+    
+    /// Fetch specific apps by their Bundle IDs
+    public func fetchSpecificApps(bundleIds: [String]) async throws -> SearchResults {
+        let cacheKey = "manual_bundles_\(bundleIds.sorted().joined(separator: "_"))"
+        if let cached = getCachedResult(key: cacheKey) {
+            return cached
+        }
+        
+        let enhancedApps = await withTaskGroup(of: AppResult?.self, returning: [AppResult].self) { group in
+            var results: [AppResult] = []
+            
+            for bundleId in bundleIds {
+                group.addTask { [weak self] in
+                    guard let self = self else { return nil }
+                    do {
+                        let appDetails = try await self.fetchAppDetails(bundleId: bundleId)
+                        guard let app = appDetails.results.first else { return nil }
+                        return await self.enhanceAppWithGlobalRatings(app: app)
+                    } catch {
+                        return nil
+                    }
+                }
+            }
+            
+            for await app in group {
+                if let app = app {
+                    results.append(app)
+                }
+            }
+            
+            // Preserve the original order
+            return bundleIds.compactMap { targetBundleId in
+                results.first { $0.bundleId == targetBundleId }
             }
         }
         
@@ -318,11 +419,37 @@ public class AppSearchManager: ObservableObject {
     
     // MARK: - Helper Methods
     
+    /// Fetch app details by App Store ID
     private func fetchAppDetails(appId: Int) async throws -> SearchResults {
         let countries = [primaryCountryCode, "us", "gb"]
         
         for country in countries {
             let urlString = "https://itunes.apple.com/\(country)/lookup?id=\(appId)"
+            guard let url = URL(string: urlString) else { continue }
+            
+            do {
+                let (data, response) = try await URLSession.shared.data(from: url)
+                
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                    let result = try JSONDecoder().decode(SearchResults.self, from: data)
+                    if !result.results.isEmpty {
+                        return result
+                    }
+                }
+            } catch {
+                continue
+            }
+        }
+        
+        throw AppSearchError.noAppFound
+    }
+    
+    /// Fetch app details by Bundle ID
+    public func fetchAppDetails(bundleId: String) async throws -> SearchResults {
+        let countries = [primaryCountryCode, "us", "gb"]
+        
+        for country in countries {
+            let urlString = "https://itunes.apple.com/lookup?bundleId=\(bundleId)&country=\(country)"
             guard let url = URL(string: urlString) else { continue }
             
             do {
@@ -368,6 +495,11 @@ public class AppSearchManager: ObservableObject {
     
     public func fetchDeveloperApps(appId: Int) async throws -> SearchResults {
         return try await fetchDeveloperApps(appId: appId, excludeAppIds: [], includeCurrentApp: false, maxApps: nil)
+    }
+    
+    /// Convenience: fetch developer apps by bundle ID with defaults
+    public func fetchDeveloperApps(bundleId: String) async throws -> SearchResults {
+        return try await fetchDeveloperApps(bundleId: bundleId, excludeBundleIds: [], includeCurrentApp: false, maxApps: nil)
     }
     
     /// Legacy method for backward compatibility

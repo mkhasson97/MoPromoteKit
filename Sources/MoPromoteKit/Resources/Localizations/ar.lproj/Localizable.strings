@@ -1,0 +1,57 @@
+/* MoPromoteKit - العربية */
+
+/* Loading States */
+"loading.developer.apps" = "جارٍ تحميل تطبيقات المطور...";
+"loading.apps" = "جارٍ تحميل التطبيقات...";
+"loading.selected.apps" = "جارٍ تحميل التطبيقات المحددة...";
+"loading.percent.complete" = "اكتمل %d%%";
+
+/* Error States */
+"error.failed.to.load.apps" = "فشل تحميل التطبيقات";
+"error.failed.to.load" = "فشل التحميل";
+"error.try.again" = "حاول مرة أخرى";
+
+/* Empty States */
+"empty.no.other.apps.found" = "لا توجد تطبيقات أخرى";
+"empty.no.other.apps.description" = "ليس لدى هذا المطور تطبيقات أخرى متاحة في متجر التطبيقات.";
+"empty.no.additional.apps.from" = "لا توجد تطبيقات إضافية من";
+"empty.no.apps.found" = "لا توجد تطبيقات";
+"empty.no.apps.available" = "لا تتوفر تطبيقات";
+"empty.no.apps.available.description" = "تعذّر تحميل التطبيقات المميزة أو العثور على تطبيقات إضافية لهذا المطور.";
+
+/* Section Titles */
+"title.more.apps" = "تطبيقات أخرى";
+"title.featured.apps" = "تطبيقات مميزة";
+"title.recommended.apps" = "تطبيقات مقترحة";
+
+/* Subtitles and Labels */
+"label.from.developer" = "من %@";
+"label.app.count" = "تطبيق %d";
+"label.apps.count" = "%d تطبيقات";
+"label.reviews" = "%@ تقييم";
+"label.selected.app" = "تطبيق محدد %d";
+"label.selected.apps" = "%d تطبيقات محددة";
+"label.handpicked.app" = "تطبيق مختار %d";
+"label.handpicked.apps" = "%d تطبيقات مختارة";
+"label.additional.app" = "تطبيق إضافي %d";
+"label.additional.apps" = "%d تطبيقات إضافية";
+"label.more.from" = "المزيد من %@";
+"label.curated.selection" = "مجموعة مختارة والمزيد من %@";
+"label.total.apps" = "تطبيق %d";
+"label.total.apps.plural" = "%d تطبيقات";
+"label.no.ratings.yet" = "لا توجد تقييمات بعد";
+
+/* Analytics Cards */
+"analytics.avg.rating" = "متوسط التقييم";
+"analytics.total.reviews" = "إجمالي التقييمات";
+"analytics.categories" = "الفئات";
+"analytics.combined.rating" = "التقييم المجمّع";
+
+/* Pricing */
+"price.get" = "تحميل";
+
+/* App Info */
+"app.info.unknown.size" = "غير معروف";
+"app.info.default.genre" = "تطبيقات";
+"app.info.default.language" = "الإنجليزية";
+"app.info.languages.count" = "%d لغة";

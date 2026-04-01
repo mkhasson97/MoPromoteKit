@@ -13,11 +13,55 @@ public struct ManualAppsView: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
     
-    let appIds: [Int]
+    /// Internal identifier for dual App ID / Bundle ID support
+    enum AppsIdentifier {
+        case appIds([Int])
+        case bundleIds([String])
+    }
+    
+    let appsIdentifier: AppsIdentifier
     let maxApps: Int
     let showTitle: Bool
     let cardStyle: MoPromoteKit.CardStyle
     let sortingOrder: MoPromoteKit.SortingOrder
+    
+    // MARK: - Initializers (App ID)
+    
+    public init(
+        appIds: [Int],
+        maxApps: Int = 10,
+        showTitle: Bool = true,
+        cardStyle: MoPromoteKit.CardStyle = .regular,
+        sortingOrder: MoPromoteKit.SortingOrder = .alphabetical
+    ) {
+        self.appsIdentifier = .appIds(appIds)
+        self.maxApps = maxApps
+        self.showTitle = showTitle
+        self.cardStyle = cardStyle
+        self.sortingOrder = sortingOrder
+    }
+    
+    // MARK: - Initializers (Bundle ID)
+    
+    public init(
+        bundleIds: [String],
+        maxApps: Int = 10,
+        showTitle: Bool = true,
+        cardStyle: MoPromoteKit.CardStyle = .regular,
+        sortingOrder: MoPromoteKit.SortingOrder = .alphabetical
+    ) {
+        self.appsIdentifier = .bundleIds(bundleIds)
+        self.maxApps = maxApps
+        self.showTitle = showTitle
+        self.cardStyle = cardStyle
+        self.sortingOrder = sortingOrder
+    }
+    
+    // MARK: - Body
+    
+    #if canImport(UIKit)
+    @State private var selectedApp: AppResult?
+    #endif
     
     public var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -31,6 +75,9 @@ public struct ManualAppsView: View {
                 contentView
             }
         }
+        #if canImport(UIKit)
+        .appStoreSheet(selectedApp: $selectedApp)
+        #endif
         .task {
             await loadApps()
         }
@@ -41,7 +88,7 @@ public struct ManualAppsView: View {
         HStack {
             ProgressView()
                 .scaleEffect(0.8)
-            Text("Loading selected apps...")
+            Text(L10n.loadingSelectedApps)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -70,7 +117,7 @@ public struct ManualAppsView: View {
             Image(systemName: "app.badge")
                 .font(.title2)
                 .foregroundColor(.gray)
-            Text("No apps found")
+            Text(L10n.emptyNoAppsFound)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -99,11 +146,11 @@ public struct ManualAppsView: View {
     private var titleView: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(MoPromoteKit.configuration.customTitle ?? "Featured Apps")
+                Text(MoPromoteKit.configuration.customTitle ?? L10n.titleFeaturedApps)
                     .font(.title2)
                     .fontWeight(.bold)
                 
-                Text("\(apps.count) selected app\(apps.count == 1 ? "" : "s")")
+                Text(L10n.selectedApps(apps.count))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -157,7 +204,15 @@ public struct ManualAppsView: View {
         errorMessage = nil
         
         do {
-            let results = try await searchManager.fetchSpecificApps(appIds: appIds)
+            let results: SearchResults
+            
+            switch appsIdentifier {
+            case .appIds(let appIds):
+                results = try await searchManager.fetchSpecificApps(appIds: appIds)
+            case .bundleIds(let bundleIds):
+                results = try await searchManager.fetchSpecificApps(bundleIds: bundleIds)
+            }
+            
             apps = Array(results.results.prefix(maxApps))
             isLoading = false
         } catch {
@@ -167,10 +222,8 @@ public struct ManualAppsView: View {
     }
     
     private func openAppInAppStore(app: AppResult) {
-        guard let url = app.appStoreURL else { return }
-        
         #if canImport(UIKit)
-        UIApplication.shared.open(url)
+        selectedApp = app
         #endif
     }
 }

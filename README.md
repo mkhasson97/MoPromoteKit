@@ -12,11 +12,16 @@
 
 ## ✨ Features
 
+- 🆔 **Bundle ID Support** - Use your app's Bundle ID instead of looking up numeric App Store IDs
+- 🪄 **Zero-Config Auto-Detection** - Automatically detects your app's bundle ID—no setup needed
+- 🔢 **App Store ID Support** - Also works with numeric App Store IDs for backward compatibility
+- 🛍️ **In-App Store Sheet** - Shows App Store pages inline via StoreKit—users never leave your app
 - 🌍 **Global Ratings Aggregation** - Combines ratings from 80+ App Store regions for more accurate data
-- 🎯 **Manual App Selection** - Promote specific apps by their IDs for curated collections
+- 🎯 **Manual App Selection** - Promote specific apps by their IDs or Bundle IDs for curated collections
 - 🎨 **Beautiful SwiftUI Cards** - Ready-to-use cards with SF Symbol category icons
 - 👤 **Developer Profile Images** - Add developer avatars from URLs or local assets
 - 🔀 **Hybrid Promotion** - Combine featured apps with automatic developer discovery
+- 🌐 **Localized in 6 Languages** - English, German, Arabic, Spanish, French, Turkish
 - 🚀 **Performance Optimized** - Concurrent API calls for fast loading
 - 🔧 **Highly Configurable** - Customize appearance, limits, and behavior
 - 📱 **Multiple Card Styles** - Regular, compact, and featured layouts
@@ -80,7 +85,9 @@ dependencies: [
 
 ## 💡 Usage
 
-### Basic Example
+### Basic Example (Bundle ID — Recommended)
+
+The simplest way to use MoPromoteKit — just pass your app's Bundle ID:
 
 ```swift
 import SwiftUI
@@ -90,14 +97,44 @@ struct SettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                // Your existing settings content
                 Text("Settings")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
-                // Add developer apps section
-                MoPromoteKit.developerAppsView(currentAppId: 1234567890)
+                // Using Bundle ID (recommended)
+                MoPromoteKit.developerAppsView(
+                    currentBundleId: "com.yourcompany.yourapp"
+                )
             }
+        }
+    }
+}
+```
+
+### Zero-Config (Auto-Detect)
+
+MoPromoteKit can automatically detect your app's bundle ID:
+
+```swift
+struct SettingsView: View {
+    var body: some View {
+        ScrollView {
+            // Auto-detects the current app's Bundle ID!
+            MoPromoteKit.developerAppsView()
+        }
+    }
+}
+```
+
+### Basic Example (App Store ID)
+
+You can also use the numeric App Store ID:
+
+```swift
+struct SettingsView: View {
+    var body: some View {
+        ScrollView {
+            MoPromoteKit.developerAppsView(currentAppId: 1234567890)
         }
     }
 }
@@ -146,7 +183,13 @@ struct SettingsView: View {
             }
             
             Section {
-                MoPromoteKit.developerAppsView(currentAppId: 1234567890)
+                // Using Bundle ID
+                MoPromoteKit.developerAppsView(
+                    currentBundleId: "com.yourcompany.yourapp"
+                )
+                
+                // Or using App Store ID
+                // MoPromoteKit.developerAppsView(currentAppId: 1234567890)
             } header: {
                 Text("More Apps")
             }
@@ -157,18 +200,21 @@ struct SettingsView: View {
 
 ### 2. Manual App Selection
 
-Promote specific apps by their IDs for curated collections:
+Promote specific apps by their Bundle IDs or App Store IDs:
 
 ```swift
 struct FeaturedAppsView: View {
     var body: some View {
         ScrollView {
-            // Manually select which apps to promote
-            MoPromoteKit.manualAppsView(appIds: [
-                1234567890,  // Your productivity app
-                9876543210,  // Your game
-                5555555555   // Your utility app
+            // Using Bundle IDs
+            MoPromoteKit.manualAppsView(bundleIds: [
+                "com.yourcompany.app1",
+                "com.yourcompany.app2",
+                "com.yourcompany.app3"
             ])
+            
+            // Or using App Store IDs
+            // MoPromoteKit.manualAppsView(appIds: [1234567890, 9876543210])
         }
     }
 }
@@ -182,11 +228,19 @@ Combine featured apps with automatic developer discovery:
 struct RecommendedAppsView: View {
     var body: some View {
         ScrollView {
+            // Using Bundle IDs
             MoPromoteKit.hybridAppsView(
-                featuredAppIds: [1234567890, 9876543210], // Featured prominently
-                currentAppId: 5555555555,                  // Your current app
-                maxAdditional: 3                           // Max additional developer apps
+                featuredBundleIds: ["com.yourcompany.app1", "com.yourcompany.app2"],
+                currentBundleId: "com.yourcompany.currentapp",
+                maxAdditional: 3
             )
+            
+            // Or using App Store IDs
+            // MoPromoteKit.hybridAppsView(
+            //     featuredAppIds: [1234567890, 9876543210],
+            //     currentAppId: 5555555555,
+            //     maxAdditional: 3
+            // )
         }
     }
 }
@@ -514,12 +568,39 @@ struct MyView: View {
     var body: some View {
         VStack {
             Text("Welcome")
-            // Other content
         }
-        .withDeveloperApps(currentAppId: 1234567890)
+        // Using Bundle ID
+        .withDeveloperApps(currentBundleId: "com.yourcompany.yourapp")
+        
+        // Or zero-config
+        // .withDeveloperApps()
+        
+        // Or App Store ID
+        // .withDeveloperApps(currentAppId: 1234567890)
     }
 }
 ```
+
+## 🛍️ In-App Store Sheet
+
+When users tap "GET" on an app card, the App Store product page is shown **inside your app** as a sheet—powered by StoreKit's `SKStoreProductViewController`. Users can download the promoted app without ever leaving your app.
+
+This behavior is automatic—no configuration needed.
+
+## 🌐 Localization
+
+MoPromoteKit is localized in **6 languages** out of the box. The UI automatically adapts to the user's device language:
+
+| Language | Code |
+|----------|------|
+| 🇬🇧 English | `en` |
+| 🇩🇪 German | `de` |
+| 🇸🇦 Arabic | `ar` |
+| 🇪🇸 Spanish | `es` |
+| 🇫🇷 French | `fr` |
+| 🇹🇷 Turkish | `tr` |
+
+All UI strings (loading states, error messages, section titles, button labels) are automatically localized—no configuration needed.
 
 ## 📊 Supported Countries
 
@@ -539,7 +620,18 @@ let majorMarkets = MoPromoteKit.majorMarkets
 - Swift 5.9+
 - Xcode 15.0+
 
-## 📝 How to Get Your App ID
+## 📝 How to Find Your Bundle ID
+
+1. Open your Xcode project
+2. Select your target
+3. Go to the **General** tab
+4. Find **Bundle Identifier** (e.g., `com.yourcompany.yourapp`)
+
+Or use it directly in code: `Bundle.main.bundleIdentifier`
+
+## 📝 How to Find Your App Store ID (Optional)
+
+If you prefer to use the numeric App Store ID:
 
 1. Go to [App Store Connect](https://appstoreconnect.apple.com)
 2. Select your app
@@ -596,6 +688,7 @@ SOFTWARE.
 ## 🙏 Acknowledgments
 
 - Apple's iTunes Search API
+- Apple StoreKit for in-app product pages
 - SF Symbols for beautiful category icons
 - The iOS developer community for feedback and suggestions
 

@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "MoPromoteKit",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v17),
         .macOS(.v14)
@@ -16,7 +17,10 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "MoPromoteKit"),
+            name: "MoPromoteKit",
+            resources: [
+                .process("Resources/Localizations")
+            ]),
 
     ]
 )
