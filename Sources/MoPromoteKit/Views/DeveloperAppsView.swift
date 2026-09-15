@@ -273,7 +273,7 @@ public struct DeveloperAppsView: View {
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color(.secondarySystemBackground))
+                        .background(Color.moSecondaryBackground)
                         .clipShape(Capsule())
                 }
                 
@@ -335,7 +335,7 @@ public struct DeveloperAppsView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
-        .background(Color(.tertiarySystemBackground))
+        .background(Color.moTertiaryBackground)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
     
@@ -768,12 +768,12 @@ public struct FeaturedAppCard: View {
             .buttonStyle(PlainButtonStyle())
         }
         .padding(16)
-        .background(Color(.systemBackground))
+        .background(Color.moBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(.systemGray5), lineWidth: 1)
+                .stroke(Color.moSeparator, lineWidth: 1)
         )
     }
 }
@@ -785,7 +785,7 @@ public struct FeaturedAppCard: View {
         DeveloperAppsView.forSettings(currentAppId: 1577859348, developerProfile: .url("https://mkhasson97.com/assets/Profile.png"))
             .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Featured View") {
@@ -793,7 +793,7 @@ public struct FeaturedAppCard: View {
         DeveloperAppsView.featured(currentAppId: 1577859348, maxApps: 3)
             .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Discovery View") {
@@ -801,6 +801,6 @@ public struct FeaturedAppCard: View {
         DeveloperAppsView.discovery(currentAppId: 1577859348, maxApps: 10)
             .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 #endif

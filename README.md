@@ -4,7 +4,7 @@
 </div>
   
 [![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
-[![Platform](https://img.shields.io/badge/Platform-iOS%2015%2B%20%7C%20macOS%2012%2B-blue.svg)](https://developer.apple.com)
+[![Platform](https://img.shields.io/badge/Platform-iOS%2017%2B%20%7C%20macOS%2014%2B-blue.svg)](https://developer.apple.com)
 [![SPM](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-brightgreen.svg)](https://swift.org/package-manager)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -616,9 +616,9 @@ let majorMarkets = MoPromoteKit.majorMarkets
 
 ## 🔧 Requirements
 
-- iOS 15.0+ / macOS 12.0+ / watchOS 8.0+ / tvOS 15.0+
-- Swift 5.9+
-- Xcode 15.0+
+- iOS 17.0+ / macOS 14.0+
+- Swift 6.1+ (builds in Swift 6 language mode)
+- Xcode 16.3+ — verified against Xcode 27 and the iOS 27 SDK
 
 ## 📝 How to Find Your Bundle ID
 

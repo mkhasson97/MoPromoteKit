@@ -101,7 +101,7 @@ public struct DeveloperAppCard: View {
             .buttonStyle(PlainButtonStyle())
         }
         .padding(12)
-        .background(Color(.systemBackground))
+        .background(Color.moBackground)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
     }
@@ -184,7 +184,7 @@ public struct DeveloperAppCompactCard: View {
             .buttonStyle(PlainButtonStyle())
         }
         .padding(8)
-        .background(Color(.secondarySystemBackground))
+        .background(Color.moSecondaryBackground)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
@@ -199,7 +199,7 @@ public struct DeveloperAppCompactCard: View {
         }
         
         DeveloperAppCard(app: {
-            var sample = AppResult.sample
+            let sample = AppResult.sample
             // Simulate paid app
             return AppResult(
                 trackId: sample.trackId,
@@ -241,7 +241,7 @@ public struct DeveloperAppCompactCard: View {
         }
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Compact Card") {
@@ -255,6 +255,6 @@ public struct DeveloperAppCompactCard: View {
         }
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 #endif

@@ -265,7 +265,7 @@ public struct HybridAppsView: View {
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color(.secondarySystemBackground))
+                        .background(Color.moSecondaryBackground)
                         .clipShape(Capsule())
                 }
             }
@@ -347,7 +347,7 @@ public struct HybridAppsView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
-        .background(Color(.tertiarySystemBackground))
+        .background(Color.moTertiaryBackground)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
     
@@ -626,7 +626,7 @@ public extension HybridAppsView {
         )
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Compact Hybrid View") {
@@ -638,7 +638,7 @@ public extension HybridAppsView {
         )
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Featured Only View") {
@@ -649,11 +649,11 @@ public extension HybridAppsView {
         )
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Full Screen Hybrid") {
-    NavigationView {
+    NavigationStack {
         ScrollView {
             HybridAppsView.fullScreen(
                 featuredAppIds: [123456789, 987654321],
@@ -663,7 +663,9 @@ public extension HybridAppsView {
             .padding(.top)
         }
         .navigationTitle("Recommended Apps")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
+        #endif
     }
 }
 #endif

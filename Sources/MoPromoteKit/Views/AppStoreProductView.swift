@@ -49,7 +49,9 @@ struct AppStoreProductView: UIViewControllerRepresentable {
         }
         
         func productViewControllerDidFinish(_ viewController: SKStoreProductViewController) {
-            dismiss()
+            // StoreKit always delivers this callback on the main thread.
+            let dismiss = dismiss
+            MainActor.assumeIsolated { dismiss() }
         }
     }
 }

@@ -197,11 +197,11 @@ public final class CountrySettings: ObservableObject, Sendable {
 extension CountrySettings {
     /// Get current selected country in a thread-safe way
     public static func getCurrentCountry() async -> String {
-        await shared.selectedCountry
+        shared.selectedCountry
     }
     
     /// Set country in a thread-safe way
     public static func setCurrentCountry(_ countryCode: String) async {
-        await shared.setCountry(countryCode)
+        shared.setCountry(countryCode)
     }
 }

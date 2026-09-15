@@ -242,7 +242,7 @@ public struct ManualAppsView: View {
         )
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Manual Apps - Featured Cards") {
@@ -256,7 +256,7 @@ public struct ManualAppsView: View {
         )
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Manual Apps - Compact") {
@@ -270,11 +270,11 @@ public struct ManualAppsView: View {
         )
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Manual Apps - Custom Title") {
-    NavigationView {
+    NavigationStack {
         ScrollView {
             VStack {
                 // Configure custom title before showing the view
@@ -293,7 +293,9 @@ public struct ManualAppsView: View {
             .padding(.top)
         }
         .navigationTitle("Manual Selection")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
+        #endif
     }
 }
 
@@ -308,7 +310,7 @@ public struct ManualAppsView: View {
         )
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Manual Apps - No Title") {
@@ -333,7 +335,7 @@ public struct ManualAppsView: View {
         
         Spacer()
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Manual Apps - Custom Order") {
@@ -347,7 +349,7 @@ public struct ManualAppsView: View {
         )
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Manual Apps - Release Date Sorting") {
@@ -361,6 +363,6 @@ public struct ManualAppsView: View {
         )
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 #endif

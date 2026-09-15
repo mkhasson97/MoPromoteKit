@@ -33,6 +33,9 @@ public struct HorizontalAppsView: View {
         iconSizeOption.value
     }
     
+    /// Horizontal inset applied to the header and the scroll viewport.
+    private static let horizontalInset: CGFloat = 16
+    
     // MARK: - Initializers (App ID)
     
     public init(
@@ -175,89 +178,34 @@ public struct HorizontalAppsView: View {
         .padding()
     }
     
-//    @ViewBuilder
-//    private var contentView: some View {
-//        VStack(alignment: .leading, spacing: 12) {
-//            if showDeveloperName && !developerName.isEmpty {
-//                developerHeader
-//            }
-//            
-//            ScrollView(.horizontal, showsIndicators: false) {
-//                HStack(spacing: spacing) {
-//                    ForEach(apps) { app in
-//                        AppIconButton(app: app, iconSize: iconSize) {
-//                            openAppInAppStore(app: app)
-//                        }
-//                    }
-//                }
-//                .padding(.horizontal, 16)
-//            }
-//        }
-//    }
-    
-    @ViewBuilder
     private var contentView: some View {
-        // horizontal inset you want (same value you used previously)
-        let inset: CGFloat = 16
-
         VStack(alignment: .leading, spacing: 12) {
             if showDeveloperName && !developerName.isEmpty {
                 developerHeader
             }
 
-            Group {
-                if #available(iOS 17, *) {
-                    // iOS 17+ — use contentMargins (preferred)
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: spacing) {
-                            ForEach(apps) { app in
-                                AppIconButton(app: app, iconSize: iconSize) {
-                                    openAppInAppStore(app: app)
-                                }
-                            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: spacing) {
+                    ForEach(apps) { app in
+                        AppIconButton(app: app, iconSize: iconSize) {
+                            openAppInAppStore(app: app)
                         }
                     }
-                    .scrollBounceBehavior(.basedOnSize)
-                    .contentMargins(.horizontal, inset) // keeps viewport inset and clipped
-                    .frame(height: iconSize + 8) // adjust if you add labels
-                } else {
-                    // Fallback for iOS 16 and earlier — mask + edge spacers
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: spacing) {
-                            // leading spacer so content starts after the visual inset
-                            Spacer().frame(width: inset)
-
-                            ForEach(apps) { app in
-                                AppIconButton(app: app, iconSize: iconSize) {
-                                    openAppInAppStore(app: app)
-                                }
-                            }
-
-                            // trailing spacer so content ends before the visual inset
-                            Spacer().frame(width: inset)
-                        }
-                    }
-                    .scrollBounceBehavior(.basedOnSize)
-                    // Clip the visible area by masking the ScrollView to an inset rect.
-                    // The mask reduces the visible area by `inset` on both sides.
-                    .mask(
-                        RoundedRectangle(cornerRadius: 0)
-                            .padding(.horizontal, inset)
-                    )
-                    .frame(height: iconSize + 8)
                 }
-            } // Group
-        } // VStack
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .contentMargins(.horizontal, Self.horizontalInset) // keeps the viewport inset and clipped
+            .frame(height: iconSize + 8) // adjust if you add labels
+        }
     }
 
-    
     @ViewBuilder
     private var developerHeader: some View {
         Text(developerName)
             .font(.headline)
             .fontWeight(.semibold)
             .foregroundColor(.primary)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Self.horizontalInset)
     }
     
     // MARK: - Functions
@@ -541,7 +489,7 @@ public extension HorizontalAppsView {
         }
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Compact Horizontal View") {
@@ -557,7 +505,7 @@ public extension HorizontalAppsView {
         }
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Large Icons View") {
@@ -567,7 +515,7 @@ public extension HorizontalAppsView {
         }
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Icons Only (No Developer Name)") {
@@ -583,7 +531,7 @@ public extension HorizontalAppsView {
         }
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Multiple Sections") {
@@ -612,7 +560,7 @@ public extension HorizontalAppsView {
         }
         .padding(.vertical)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("Custom Configuration") {
@@ -677,7 +625,7 @@ public extension HorizontalAppsView {
         }
         .padding(.top)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 
 #Preview("All Size Options") {
@@ -738,6 +686,6 @@ public extension HorizontalAppsView {
         }
         .padding(.vertical)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.moGroupedBackground)
 }
 #endif
